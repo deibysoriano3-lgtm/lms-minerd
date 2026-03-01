@@ -1,0 +1,242 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Usuario {
+  id               Int               @id @default(autoincrement())
+  sigerd_id        String?           @unique
+  nombre_completo  String
+  email            String            @unique
+  password_hash    String
+  rol              String            @default("ESTUDIANTE")
+  fecha_creacion   DateTime          @default(now())
+  perfilDocente    DocentePerfil?
+  perfilEstudiante EstudiantePerfil?
+  modulosFormativo ModuloFormativo[] @relation("DocenteEncargado")
+}
+
+model FamiliaProfesional {
+  id          Int              @id @default(autoincrement())
+  nombre      String           @unique
+  descripcion String?
+  carreras    CarreraTecnica[]
+}
+
+model CarreraTecnica {
+  id                     Int                @id @default(autoincrement())
+  codigo_minerd          String             @unique
+  nombre                 String
+  familia_profesional_id Int
+  duracion_anios         Int                @default(3)
+  perfil_egreso          String?
+  estado                 String             @default("ACTIVA")
+  familia                FamiliaProfesional @relation(fields: [familia_profesional_id], references: [id])
+  estudiantes            EstudiantePerfil[]
+  modulos                ModuloFormativo[]
+  secciones              Seccion[]
+}
+
+model PeriodoAcademico {
+  id                Int                   @id @default(autoincrement())
+  nombre            String
+  fecha_inicio      DateTime
+  fecha_fin         DateTime
+  es_activo         Boolean               @default(false)
+  cargas_academicas CargaAcademica[]
+  matriculas        MatriculaEstudiante[]
+}
+
+model Seccion {
+  id                Int                   @id @default(autoincrement())
+  carrera_id        Int
+  nombre            String
+  grado             String
+  cargas_academicas CargaAcademica[]
+  matriculas        MatriculaEstudiante[]
+  carrera           CarreraTecnica        @relation(fields: [carrera_id], references: [id])
+}
+
+model EstudiantePerfil {
+  id                    Int                   @id @default(autoincrement())
+  usuario_id            Int                   @unique
+  rne                   String                @unique
+  acta_nacimiento_folio String?
+  fecha_nacimiento      DateTime
+  direccion_residencia  String?
+  telefono_contacto     String?
+  estado_academico      String                @default("ACTIVO")
+  fecha_ingreso         DateTime              @default(now())
+  carrera_actual_id     Int?
+  calificaciones_ra     CalificacionRA[]
+  calificaciones_acad   CalificacionAcademica[]
+  carrera_actual        CarreraTecnica?       @relation(fields: [carrera_actual_id], references: [id])
+  usuario               Usuario               @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  matriculas            MatriculaEstudiante[]
+  anecdotas             RegistroAnecdotico[]
+  tutores               TutorLegal[]
+  evaluaciones_fct      EvaluacionFCT[]
+}
+
+model TutorLegal {
+  id                 Int              @id @default(autoincrement())
+  estudiante_id      Int
+  nombres_apellidos  String
+  cedula             String?          @unique
+  parentesco         String
+  telefono           String
+  es_tutor_principal Boolean          @default(true)
+  estudiante         EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+}
+
+model DocentePerfil {
+  id                   Int                  @id @default(autoincrement())
+  usuario_id           Int                  @unique
+  cedula               String               @unique
+  especialidad_tecnica String?
+  grado_academico      String?
+  fecha_contratacion   DateTime?
+  estado_laboral       String               @default("ACTIVO")
+  calificaciones_ra    CalificacionRA[]
+  calificaciones_acad  CalificacionAcademica[]
+  cargas_academicas    CargaAcademica[]
+  usuario              Usuario              @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  anecdotas_creadas    RegistroAnecdotico[]
+}
+
+model ModuloFormativo {
+  id                     Int                    @id @default(autoincrement())
+  carrera_id             Int
+  codigo                 String                 @unique
+  nombre                 String
+  horas_totales          Int
+  docente_id             Int?
+  cargas_academicas      CargaAcademica[]
+  docente                Usuario?               @relation("DocenteEncargado", fields: [docente_id], references: [id])
+  carrera                CarreraTecnica         @relation(fields: [carrera_id], references: [id])
+  resultados_aprendizaje ResultadoAprendizaje[]
+}
+
+model ResultadoAprendizaje {
+  id             Int              @id @default(autoincrement())
+  modulo_id      Int
+  numero         String
+  descripcion    String
+  valor_maximo   Int              @default(0)
+  calificaciones CalificacionRA[]
+  modulo         ModuloFormativo  @relation(fields: [modulo_id], references: [id], onDelete: Cascade)
+
+  @@unique([modulo_id, numero])
+}
+
+model CargaAcademica {
+  id                     Int                  @id @default(autoincrement())
+  periodo_id             Int
+  docente_id             Int
+  modulo_formativo_id    Int?
+  asignatura_academica_id Int?
+  seccion_id             Int
+  horas_teoricas         Int                  @default(0)
+  horas_practicas        Int                  @default(0)
+  seccion                Seccion              @relation(fields: [seccion_id], references: [id])
+  modulo_formativo       ModuloFormativo?     @relation(fields: [modulo_formativo_id], references: [id])
+  asignatura_academica   AsignaturaAcademica? @relation(fields: [asignatura_academica_id], references: [id])
+  docente                DocentePerfil        @relation(fields: [docente_id], references: [id])
+  periodo                PeriodoAcademico     @relation(fields: [periodo_id], references: [id])
+
+  // Validar a nivel aplicación que uno u otro exista.
+  @@unique([periodo_id, modulo_formativo_id, seccion_id])
+}
+
+
+model MatriculaEstudiante {
+  id                Int              @id @default(autoincrement())
+  estudiante_id     Int
+  periodo_id        Int
+  seccion_id        Int
+  fecha_inscripcion DateTime         @default(now())
+  estado_matricula  String           @default("INSCRITO")
+  seccion           Seccion          @relation(fields: [seccion_id], references: [id])
+  periodo           PeriodoAcademico @relation(fields: [periodo_id], references: [id])
+  estudiante        EstudiantePerfil @relation(fields: [estudiante_id], references: [id])
+
+  @@unique([estudiante_id, periodo_id])
+}
+
+model CalificacionRA {
+  id                    Int                  @id @default(autoincrement())
+  estudiante_id         Int
+  ra_id                 Int
+  valor_logrado         Int
+  rp1                   Int?                 @default(0)
+  rp2                   Int?                 @default(0)
+  fecha_evaluacion      DateTime             @default(now())
+  docente_id            Int
+  docente               DocentePerfil        @relation(fields: [docente_id], references: [id])
+  resultado_aprendizaje ResultadoAprendizaje @relation(fields: [ra_id], references: [id], onDelete: Cascade)
+  estudiante            EstudiantePerfil     @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+
+  @@unique([estudiante_id, ra_id])
+}
+
+model RegistroAnecdotico {
+  id             Int              @id @default(autoincrement())
+  estudiante_id  Int
+  docente_id     Int
+  incidencia     String
+  tipo           String           @default("OBSERVACION")
+  fecha_registro DateTime         @default(now())
+  docente        DocentePerfil    @relation(fields: [docente_id], references: [id])
+  estudiante     EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+}
+
+model AsignaturaAcademica {
+  id                Int              @id @default(autoincrement())
+  codigo            String           @unique
+  nombre            String
+  descripcion       String?
+  grado_sugerido    String?
+  docente_id        Int?             // Responsable de área
+  cargas_academicas CargaAcademica[]
+  calificaciones    CalificacionAcademica[]
+}
+
+model CalificacionAcademica {
+  id             Int                 @id @default(autoincrement())
+  estudiante_id  Int
+  asignatura_id  Int
+  p1             Int?                @default(0)
+  p2             Int?                @default(0)
+  p3             Int?                @default(0)
+  p4             Int?                @default(0)
+  rp1            Int?                @default(0)
+  rp2            Int?                @default(0)
+  rp3            Int?                @default(0)
+  rp4            Int?                @default(0)
+  cpc            Int?                @default(0) // Calif. Prueba Completiva
+  cpex           Int?                @default(0) // Extraordinaria
+  estado         String              @default("CURSANDO")
+  docente_id     Int                 // Docente que asentó la nota
+  docente        DocentePerfil       @relation(fields: [docente_id], references: [id])
+  estudiante     EstudiantePerfil    @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+  asignatura     AsignaturaAcademica @relation(fields: [asignatura_id], references: [id])
+
+  @@unique([estudiante_id, asignatura_id])
+}
+
+model EvaluacionFCT {
+  id               Int              @id @default(autoincrement())
+  estudiante_id    Int
+  tutor_empresa    String           // Nombre del tutor externo
+  empresa          String
+  horas_reportadas Int
+  criterios        String           // JSON serializado con las calificaciones por criterio
+  comentarios      String?
+  estado           String           @default("ENVIADO") // ENVIADO | APROBADO
+  creado_en        DateTime         @default(now())
+  estudiante       EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+}

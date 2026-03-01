@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Informe de Investigación - MATEMÁTICA DISCRETA</title>
+    <style>
+        /* Configuración global del visor */
+        body {
+            font-family: 'Georgia', serif; /* Tipografía diferente, muy elegante y académica */
+            line-height: 1.7;
+            color: #2b2b2b;
+            background-color: #636e72; 
+            margin: 0;
+            padding: 40px 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px; 
+        }
+
+        /* Configuración estricta A4 */
+        .page-container {
+            width: 210mm; 
+            min-height: 297mm; 
+            background-color: #ffffff;
+            padding: 2.54cm; 
+            box-sizing: border-box;
+            box-shadow: 0 8px 16px rgba(0,0,0,0.4);
+            position: relative;
+        }
+
+        /* Estilos de la Portada */
+        .portada {
+            text-align: center;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-top: 10px;
+        }
+        
+        .portada * {
+            text-align: center;
+            margin: 0; 
+        }
+        
+        .logo-institucion {
+            margin-bottom: 25px;
+        }
+
+        .datos-institucion {
+            margin-bottom: 55px;
+            font-size: 16px;
+            letter-spacing: 0.5px;
+        }
+        .datos-institucion p {
+            margin-bottom: 6px;
+        }
+
+        .portada h1 { font-size: 26px; text-transform: uppercase; margin-bottom: 15px; color: #1a252f; font-weight: bold;}
+        .portada h2 { font-size: 18px; font-style: italic; margin-bottom: 45px; color: #34495e;}
+        .portada h3 { font-size: 21px; margin-bottom: 25px; text-transform: uppercase; line-height: 1.4;}
+        
+        .mediador {
+            margin-bottom: 65px;
+            font-size: 17px;
+            padding: 10px;
+            border-top: 1px solid #ccc;
+            border-bottom: 1px solid #ccc;
+            display: inline-block;
+            align-self: center;
+        }
+
+        .bloque-nombres {
+            font-size: 17px;
+            margin-bottom: 50px;
+        }
+        .bloque-nombres p { margin-bottom: 8px; }
+        
+        .espacio-nombres {
+            margin-top: 35px; 
+        }
+
+        .fecha {
+            margin-top: auto; 
+            font-size: 16px;
+            color: #555;
+        }
+
+        /* Estilos del Índice Diferenciados */
+        .indice-box {
+            background-color: #fdfdfd;
+            border: 1px solid #e0e0e0;
+            padding: 30px;
+            border-radius: 4px;
+        }
+        .indice h2 { 
+            text-align: center; 
+            text-transform: uppercase; 
+            margin-bottom: 25px; 
+            letter-spacing: 2px;
+            color: #2c3e50;
+        }
+        .indice-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 16px;
+        }
+        .indice-item span.linea {
+            flex-grow: 1;
+            border-bottom: 1px solid #ddd; /* Línea sólida en lugar de puntos */
+            margin: 0 15px;
+            position: relative;
+            top: -6px;
+        }
+        .indice a { text-decoration: none; color: #2c3e50; font-weight: 500;}
+        .indice-sub { padding-left: 25px; font-size: 15px;}
+        
+        /* Estilos del Contenido Diferenciados */
+        h2.section-title {
+            text-transform: uppercase;
+            font-size: 19px;
+            margin-top: 45px;
+            margin-bottom: 25px;
+            color: #1a252f;
+            border-left: 5px solid #2980b9; /* Acento visual a la izquierda */
+            padding-left: 15px;
+            text-align: left;
+        }
+        h3 { font-size: 17px; margin-top: 35px; margin-bottom: 15px; color: #2c3e50; font-style: italic;}
+        p { 
+            text-align: justify; 
+            margin-bottom: 18px; 
+            font-size: 16px;
+        }
+        
+        /* Estilos de Referencias */
+        .referencias p {
+            padding-left: 40px;
+            text-indent: -40px;
+            text-align: left;
+            margin-bottom: 18px;
+        }
+
+        /* Reglas de impresión para PDF */
+        @page {
+            size: A4;
+            margin: 2.54cm;
+        }
+        @media print {
+            body {
+                background-color: transparent;
+                padding: 0;
+                gap: 0;
+                display: block;
+            }
+            .page-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                min-height: auto;
+                page-break-after: always; 
+            }
+            .page-container:last-child {
+                page-break-after: auto;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="page-container">
+        <div class="portada">
+            <div class="logo-institucion">
+                <img src="https://commons.wikimedia.org/wiki/Special:FilePath/Logo_Universidad_Apec.png" alt="Logo UNAPEC" width="135">
+            </div>
+
+            <div class="datos-institucion">
+                <p><strong>UNIVERSIDAD APEC (UNAPEC)</strong></p>
+                <p>Decanato de Artes y Comunicación / Ciencias y Humanidades</p>
+            </div>
+
+            <h1>Matemática Discreta (MNS-403)</h1>
+            <h2>Informe de Investigación</h2>
+
+            <h3>Uso de la Lógica Proposicional para Fortalecer el Pensamiento Crítico en Matemática y Ciencias</h3>
+            
+            <div class="mediador">
+                <strong>Mediador Seleccionado:</strong> Funciones y Modelos Funcionales
+            </div>
+
+            <div class="bloque-nombres">
+                <p><strong>Presentado por:</strong></p>
+                <p>Deiby Rafael Soriano Montes de Oca</p>
+                <p><strong>Matrícula:</strong> A00119526</p>
+
+                <div class="espacio-nombres">
+                    <p><strong>Facilitador:</strong></p>
+                    <p>Juan Pablo Buret</p>
+                </div>
+            </div>
+
+            <div class="fecha">
+                <p>Monte Plata, República Dominicana</p>
+                <p>Marzo, 2026</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-container">
+        <div class="indice-box" id="indice">
+            <div class="indice">
+                <h2>Tabla de Contenidos</h2>
+                <div class="indice-item"><a href="#resumen">Resumen</a><span class="linea"></span><span>3</span></div>
+                <div class="indice-item"><a href="#introduccion">Introducción</a><span class="linea"></span><span>3</span></div>
+                <div class="indice-item"><a href="#cuerpo">Desarrollo del Ensayo</a><span class="linea"></span><span>4</span></div>
+                <div class="indice-item indice-sub"><a href="#conexion-teorica">1. La lógica deductiva como cimiento de las funciones</a><span class="linea"></span><span>4</span></div>
+                <div class="indice-item indice-sub"><a href="#aplicacion-practica">2. El cálculo y la modelación a través de conectores lógicos</a><span class="linea"></span><span>5</span></div>
+                <div class="indice-item indice-sub"><a href="#impacto-argumentativo">3. Transformación de la capacidad argumentativa en el estudiante</a><span class="linea"></span><span>5</span></div>
+                <div class="indice-item"><a href="#conclusion">Conclusiones</a><span class="linea"></span><span>6</span></div>
+                <div class="indice-item"><a href="#referencias">Referencias Bibliográficas</a><span class="linea"></span><span>6</span></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="page-container">
+        <h2 class="section-title" id="resumen">Resumen</h2>
+        <p>Este informe de investigación explora la integración de la lógica proposicional en el currículo de matemáticas del nivel secundario, enfatizando su rol en la construcción del pensamiento crítico. A través del análisis del mediador "Funciones y Modelos Funcionales", se demuestra que el uso estructurado de conectores lógicos, tablas de verdad y operaciones de equivalencia proporciona al estudiante las bases para interpretar modelos algebraicos y de cálculo de forma rigurosa. La asimilación de reglas como la implicación condicional permite a los alumnos dejar atrás la simple memorización de algoritmos para adoptar una postura analítica. Se concluye que la lógica matemática es imprescindible para desarrollar habilidades de argumentación sólidas, permitiendo justificar procedimientos y resolver problemas complejos con validez demostrativa.</p>
+
+        <h2 class="section-title" id="introduccion">Introducción</h2>
+        <p>Uno de los mayores desafíos en la educación matemática contemporánea es lograr que el estudiante no solo opere mecánicamente, sino que comprenda la validez de sus propias acciones. En este contexto, el presente documento investiga el impacto que tiene la enseñanza explícita de la lógica proposicional en la capacidad de los estudiantes de secundaria para resolver problemas y argumentar sus procesos analíticos.</p>
+        <p>Para ilustrar esta conexión, se aborda la investigación utilizando las Funciones y los Modelos Funcionales como eje mediador. El concepto de función es el corazón del análisis matemático, el preámbulo al cálculo diferencial y la base de los modelos financieros. Sin embargo, su comprensión profunda exige un pensamiento estructurado que solo la lógica formal puede proveer. En las siguientes secciones, se desglosará cómo los fundamentos proposicionales actúan como el andamiaje oculto que sostiene la modelación matemática en el aula.</p>
+
+        <h2 class="section-title" id="cuerpo">Desarrollo del Ensayo</h2>
+        
+        <h3 id="conexion-teorica">1. La lógica deductiva como cimiento de las funciones</h3>
+        <p>La abstracción que requiere el estudio de las funciones frecuentemente resulta en un obstáculo epistemológico para el estudiante de secundaria. No obstante, una función es, en su definición más pura, una relación sujeta a restricciones lógicas. Cuando se enseña que el dominio de una función racional no puede contener valores que hagan cero el denominador, se está aplicando directamente una negación lógica estructurada.</p>
+        <p>El dominio fluido de la conjunción ("y", &and;) y la disyunción ("o", &or;) cambia drásticamente la forma en que el alumno interactúa con los conjuntos numéricos. Al trabajar con funciones definidas a trozos (por partes), las restricciones de cada segmento se expresan mediante desigualdades matemáticas que son, en esencia, proposiciones compuestas. Si el estudiante comprende la tabla de verdad de la disyunción excluyente o de la conjunción, es capaz de intersectar intervalos numéricos sin cometer errores conceptuales, fundamentando teóricamente lo que antes hacía por imitación.</p>
+
+        <h3 id="aplicacion-practica">2. El cálculo y la modelación a través de conectores lógicos</h3>
+        <p>En el ámbito de las ciencias aplicadas y la resolución de problemas, los modelos funcionales exigen traducir el lenguaje natural a expresiones matemáticas. Consideremos un problema de cálculo de costos o modelación financiera. Al afirmar: "Si la producción supera las 500 unidades, entonces el costo unitario disminuye", el estudiante está formulando una implicación condicional ($p \rightarrow q$).</p>
+        <p>Enseñar explícitamente las propiedades de la implicación y su contrapositiva ($\neg q \rightarrow \neg p$) dota al estudiante de herramientas poderosas para comprobar sus resultados. Si comprende que una implicación material solo es falsa cuando la premisa es verdadera y la conclusión es falsa, podrá verificar los límites de su propio modelo de optimización. Esto evita el clásico error de obtener resultados absurdos (como tiempos negativos o costos irracionales) al procesar una función, ya que el estudiante aprende a condicionar deductivamente las variables desde el inicio del problema.</p>
+
+        <h3 id="impacto-argumentativo">3. Transformación de la capacidad argumentativa en el estudiante</h3>
+        <p>El impacto más profundo de esta integración curricular ocurre en la expresión oral y escrita del alumno. La justificación de procedimientos suele ser el punto más débil en las evaluaciones de matemáticas de secundaria. Integrar la equivalencia lógica y las reglas de inferencia (como el silogismo hipotético) proporciona un marco para que el alumno defienda sus ideas.</p>
+        <p>Por ejemplo, en lugar de afirmar erróneamente una proposición por simple intuición, el estudiante capacitado en lógica proposicional puede construir demostraciones directas o utilizar el contraejemplo. Al comprender la negación de proposiciones universales, entiende que basta un solo valor fuera del dominio para refutar una regla general. Esta madurez mental transforma la dinámica del aula, pasando de la imposición de fórmulas por parte del docente a la construcción de argumentos irrefutables por parte de los jóvenes.</p>
+
+        <h2 class="section-title" id="conclusion">Conclusiones</h2>
+        <p>Tras analizar la intersección entre la lógica matemática y los modelos funcionales, queda demostrado que la instrucción en lógica proposicional trasciende el currículo de la Matemática Discreta para convertirse en el pilar del pensamiento científico. La conexión entre conectores lógicos, restricciones de dominio e implicaciones funcionales permite a los alumnos modelar escenarios de cálculo y optimización con extrema precisión.</p>
+        <p>Finalmente, se concluye que el fomento de estas competencias lógicas es el catalizador necesario para mejorar la capacidad argumentativa de los estudiantes. Al apropiarse de herramientas como las tablas de verdad y la equivalencia, el alumno de secundaria adquiere la autonomía analítica requerida no solo para aprobar una asignatura, sino para enfrentarse a problemas complejos del mundo real justificando cada paso con absoluta rigurosidad racional.</p>
+
+        <h2 class="section-title" id="referencias">Referencias Bibliográficas</h2>
+        <div class="referencias">
+            <p>Epp, S. S. (2010). <em>Discrete Mathematics with Applications</em> (4th ed.). Brooks/Cole Cengage Learning.</p>
+            <p>Hernández, R., & Fernández, C. (2014). <em>Metodología de la Investigación</em> (6ta ed.). McGraw-Hill.</p>
+            <p>Ministerio de Educación de la República Dominicana [MINERD]. (2016). <em>Diseño Curricular Nivel Secundario</em>. Santo Domingo, República Dominicana.</p>
+            <p>Suppes, P., & Hill, S. (1992). <em>Introducción a la Lógica Matemática</em>. Editorial Reverté.</p>
+            <p>Universidad APEC. (2026). <em>Matemática Discreta (MNS-403) - Propuesta de temas de investigación individual</em>.</p>
+        </div>
+    </div>
+
+</body>
+</html>
