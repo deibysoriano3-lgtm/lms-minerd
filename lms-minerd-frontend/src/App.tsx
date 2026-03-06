@@ -10,6 +10,7 @@ import AdminCurriculumDashboard from './pages/AdminCurriculumDashboard';
 import AdminEnrollmentDashboard from './pages/AdminEnrollmentDashboard';
 import AdminReportsDashboard from './pages/AdminReportsDashboard';
 import BoletinCalificaciones from './pages/BoletinCalificaciones';
+import StudentPortal from './pages/StudentPortal';
 import LoginScreen from './pages/LoginScreen';
 import Navbar from './components/Navbar';
 import AnimatedPage from './components/AnimatedPage';
@@ -86,6 +87,7 @@ function Home({ userRole, userName }: { userRole: string | null; userName: strin
           {userRole === 'ADMIN' && 'Panel de administración del Politécnico Prof. Rosario Rojas de Contreras'}
           {userRole === 'DOCENTE' && 'Portal de evaluación docente — Registro de calificaciones por RAs'}
           {userRole === 'TUTOR_FCT' && 'Portal de seguimiento de Formación en Centros de Trabajo (FCT)'}
+          {userRole === 'ESTUDIANTE' && 'Bienvenido a tu portal estudiantil — consulta calificaciones, boletín y más'}
         </p>
       </div>
 
@@ -155,6 +157,25 @@ function Home({ userRole, userName }: { userRole: string | null; userName: strin
         </motion.div>
       )}
 
+      {userRole === 'ESTUDIANTE' && (
+        <motion.div variants={container} initial="hidden" animate="show" className="grid gap-5">
+          <motion.div variants={item}>
+            <Link to="/estudiante"
+              className="group flex flex-col sm:flex-row items-center gap-6 rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-xl hover:ring-2 hover:ring-cyan-300 transition-all duration-300 ring-offset-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-cyan-600 rounded-2xl flex items-center justify-center text-white shrink-0">
+                <GraduationCap className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <span className="text-[10px] font-bold tracking-wider text-cyan-500 uppercase">Portal Estudiantil</span>
+                <h2 className="text-xl font-bold text-slate-800 mt-0.5">Mi Expediente Académico</h2>
+                <p className="text-sm text-slate-500 mt-1">Consulta tus calificaciones por módulo y RA, asignaturas, boletín oficial y anotaciones.</p>
+              </div>
+              <div className="text-xs font-semibold text-cyan-600 group-hover:translate-x-1 transition-transform shrink-0">Acceder →</div>
+            </Link>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Footer info */}
       <div className="mt-10 pt-6 border-t border-slate-200 flex flex-wrap items-center gap-4 text-xs text-slate-400">
         <span>📍 Distrito Educativo 17-02 · Monte Plata</span>
@@ -184,6 +205,11 @@ function AnimatedRoutes({ userRole, userName }: { userRole: 'ADMIN' | 'DOCENTE' 
         {/* Rutas de Empresa (FCT) */}
         {userRole === 'TUTOR_FCT' && (
           <Route path="/empresa" element={<AnimatedPage><TutorEmpresarialPortal /></AnimatedPage>} />
+        )}
+
+        {/* Rutas de Estudiante */}
+        {userRole === 'ESTUDIANTE' && (
+          <Route path="/estudiante" element={<AnimatedPage><StudentPortal /></AnimatedPage>} />
         )}
 
         {/* Rutas de Administrador ERP */}
