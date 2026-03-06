@@ -31,7 +31,7 @@ function initials(name: string) {
 }
 
 const ALL_LINKS = [
-    { path: '/', label: 'Inicio', icon: Home, roles: ['ADMIN', 'DOCENTE', 'TUTOR_FCT'] },
+    { path: '/', label: 'Inicio', icon: Home, roles: ['ADMIN', 'DOCENTE', 'TUTOR_FCT', 'ESTUDIANTE'] },
     { path: '/admin/estudiantes', label: 'Estudiantes', icon: Users, roles: ['ADMIN'] },
     { path: '/admin/matricula', label: 'Matrícula', icon: FolderClock, roles: ['ADMIN'] },
     { path: '/admin/academico', label: 'Dir. Académica', icon: GraduationCap, roles: ['ADMIN'] },
@@ -39,6 +39,7 @@ const ALL_LINKS = [
     { path: '/admin/reportes', label: 'Reportes', icon: Printer, roles: ['ADMIN'] },
     { path: '/docente', label: 'Portal Docente', icon: BookOpen, roles: ['DOCENTE'] },
     { path: '/empresa', label: 'Portal FCT', icon: Building2, roles: ['TUTOR_FCT'] },
+    { path: '/estudiante', label: 'Mi Expediente', icon: GraduationCap, roles: ['ESTUDIANTE'] },
 ];
 
 export default function Navbar({ userRole, userName, onLogout }: NavbarProps) {
@@ -133,10 +134,24 @@ export default function Navbar({ userRole, userName, onLogout }: NavbarProps) {
                 </div>
             </nav>
 
-            {/* Mobile menu */}
+            {/* Mobile menu — muestra ícono + etiqueta completa */}
             {mobileOpen && (
-                <div className="sm:hidden bg-[#0b2d4e] border-b border-white/10 px-4 py-3 flex flex-col gap-1 z-40">
-                    {links.map(l => <NavLink key={l.path} {...l} />)}
+                <div className="sm:hidden bg-[#0b2d4e] border-b border-white/10 px-4 py-3 flex flex-col gap-0.5 z-40">
+                    {links.map(({ path, label, icon: Icon }) => {
+                        const active = location.pathname === path;
+                        return (
+                            <Link
+                                key={path}
+                                to={path}
+                                onClick={() => setMobileOpen(false)}
+                                className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors
+                                    ${active ? 'bg-white/15 text-white' : 'text-blue-100/80 hover:bg-white/10 hover:text-white'}`}
+                            >
+                                <Icon className="w-4 h-4 shrink-0" />
+                                {label}
+                            </Link>
+                        );
+                    })}
                 </div>
             )}
         </>
