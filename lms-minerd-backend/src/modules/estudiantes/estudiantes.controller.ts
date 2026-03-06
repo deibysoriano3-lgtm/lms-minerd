@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, UseGuards, Request } from '@nestjs/common';
 import { EstudiantesService } from './estudiantes.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 
@@ -10,6 +10,11 @@ export class EstudiantesController {
     @Get()
     findAll() {
         return this.estudiantesService.findAll();
+    }
+
+    @Get('mi-perfil')
+    async getMiPerfil(@Request() req: any) {
+        return this.estudiantesService.getMiPerfil(req.user.userId);
     }
 
     @Get(':id/expediente')

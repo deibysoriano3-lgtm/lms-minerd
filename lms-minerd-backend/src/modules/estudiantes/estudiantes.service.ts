@@ -90,6 +90,47 @@ export class EstudiantesService {
         return estudiante;
     }
 
+    async getMiPerfil(usuarioId: number) {
+        const estudiante = await this.prisma.estudiantePerfil.findUnique({
+            where: { usuario_id: usuarioId },
+            include: {
+                usuario: { select: { nombre_completo: true, email: true } },
+                carrera_actual: { include: { familia: true } },
+                tutores: true,
+                matriculas: {
+                    orderBy: { fecha_inscripcion: 'desc' },
+                    take: 1,
+                    include: { seccion: true, periodo: true }
+                },
+                calificaciones_ra: {
+                    include: {
+                        resultado_aprendizaje: {
+                            include: { modulo: true }
+                        }
+                    }
+                },
+                calificaciones_acad: {
+                    include: { asignatura: true }
+                },
+                anecdotas: {
+                    orderBy: { fecha_registro: 'desc' },
+                    include: {
+                        docente: {
+                            include: { usuario: { select: { nombre_completo: true } } }
+                        }
+                    }
+                },
+                evaluaciones_fct: {
+                    orderBy: { creado_en: 'desc' },
+                    take: 1
+                }
+            }
+        });
+
+        if (!estudiante) throw new NotFoundException('Perfil de estudiante no encontrado');
+        return estudiante;
+    }
+
     async getBoletinData(estudianteId: number) {
         const estudiante = await this.prisma.estudiantePerfil.findUnique({
             where: { id: estudianteId },
