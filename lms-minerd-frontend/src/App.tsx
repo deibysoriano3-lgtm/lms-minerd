@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
 import { BookOpen, GraduationCap, Building2, Clock, Users, BookMarked, BarChart3 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -14,6 +14,48 @@ import StudentPortal from './pages/StudentPortal';
 import LoginScreen from './pages/LoginScreen';
 import Navbar from './components/Navbar';
 import AnimatedPage from './components/AnimatedPage';
+
+const API = 'http://localhost:3000';
+
+// ── Barra de estadísticas institucionales (solo Admin) ────────
+function AdminStatsBar() {
+  const [stats, setStats] = useState({ estudiantes: 0, docentes: 0, periodo: '—', secciones: 0 });
+
+  useEffect(() => {
+    const token = localStorage.getItem('lms_minerd_token');
+    const h = { Authorization: `Bearer ${token}` };
+    Promise.all([
+      fetch(`${API}/api/estudiantes`, { headers: h }).then(r => r.json()).catch(() => []),
+      fetch(`${API}/api/docentes`, { headers: h }).then(r => r.json()).catch(() => []),
+      fetch(`${API}/api/matricula/periodos`, { headers: h }).then(r => r.json()).catch(() => []),
+      fetch(`${API}/api/matricula/secciones`, { headers: h }).then(r => r.json()).catch(() => []),
+    ]).then(([est, doc, periodos, sec]) => {
+      const pa = (Array.isArray(periodos) ? periodos : []).find((p: any) => p.es_activo);
+      setStats({
+        estudiantes: Array.isArray(est) ? est.filter((e: any) => e.estado_academico === 'ACTIVO').length : 0,
+        docentes: Array.isArray(doc) ? doc.filter((d: any) => d.estado_laboral === 'ACTIVO').length : 0,
+        periodo: pa?.nombre ?? 'Sin período activo',
+        secciones: Array.isArray(sec) ? sec.length : 0,
+      });
+    });
+  }, []);
+
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
+      {[
+        { label: 'Estudiantes Activos', value: stats.estudiantes, color: 'text-indigo-700', bg: 'bg-indigo-50 border-indigo-100' },
+        { label: 'Docentes Activos', value: stats.docentes, color: 'text-violet-700', bg: 'bg-violet-50 border-violet-100' },
+        { label: 'Período Académico', value: stats.periodo, color: 'text-teal-700', bg: 'bg-teal-50 border-teal-100', isText: true },
+        { label: 'Secciones', value: stats.secciones, color: 'text-rose-700', bg: 'bg-rose-50 border-rose-100' },
+      ].map(s => (
+        <div key={s.label} className={`rounded-xl border p-4 text-center ${s.bg}`}>
+          <p className={`font-black ${s.isText ? 'text-sm leading-tight' : 'text-2xl'} ${s.color}`}>{s.value}</p>
+          <p className="text-xs text-slate-500 mt-1 leading-tight">{s.label}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
 
 const container = {
   hidden: { opacity: 0 },
@@ -90,6 +132,9 @@ function Home({ userRole, userName }: { userRole: string | null; userName: strin
           {userRole === 'ESTUDIANTE' && 'Bienvenido a tu portal estudiantil — consulta calificaciones, boletín y más'}
         </p>
       </div>
+
+      {/* Estadísticas institucionales en tiempo real (solo Admin) */}
+      {userRole === 'ADMIN' && <AdminStatsBar />}
 
       {/* Tarjetas por ROL */}
       {userRole === 'ADMIN' && (
