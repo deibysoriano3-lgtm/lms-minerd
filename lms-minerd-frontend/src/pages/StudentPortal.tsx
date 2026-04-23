@@ -2,32 +2,13 @@ import { useState, useEffect } from 'react';
 import {
   GraduationCap, BookOpen, ClipboardList, FileText, Award,
   CheckCircle, XCircle, AlertCircle, User, Calendar, ChevronDown,
-  ChevronRight, Briefcase, Star, BookMarked, Activity, Clock, FileQuestion
+  ChevronRight, Briefcase, Star, BookMarked, Activity
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const API = 'http://localhost:3000';
 
-type Vista = 'dashboard' | 'calificaciones' | 'asignaturas' | 'anecdotas' | 'boletin' | 'fct' | 'tareas';
-
-interface TareaEstudiante {
-  id: number;
-  titulo: string;
-  descripcion: string;
-  instrucciones?: string;
-  tipo: string;
-  fecha_asignacion: string;
-  fecha_entrega: string;
-  estado: string;
-  docente: { usuario: { nombre_completo: string } };
-}
-
-const TIPO_COLORS_EST: Record<string, string> = {
-  TAREA: 'bg-indigo-100 text-indigo-700',
-  ACTIVIDAD: 'bg-emerald-100 text-emerald-700',
-  EXAMEN: 'bg-rose-100 text-rose-700',
-  PROYECTO: 'bg-amber-100 text-amber-700',
-};
+type Vista = 'dashboard' | 'calificaciones' | 'asignaturas' | 'anecdotas' | 'boletin' | 'fct';
 
 interface PerfilEstudiante {
   id: number;
@@ -548,168 +529,6 @@ function VistaFCT({ p }: { p: PerfilEstudiante }) {
   );
 }
 
-/* ─── VISTA: TAREAS ─── */
-function VistaTareas({ seccionId }: { seccionId: number | null }) {
-  const [tareas, setTareas] = useState<TareaEstudiante[]>([]);
-  const [cargando, setCargando] = useState(true);
-  const [expandida, setExpandida] = useState<number | null>(null);
-
-  useEffect(() => {
-    if (!seccionId) { setCargando(false); return; }
-    const token = localStorage.getItem('lms_minerd_token');
-    fetch(`${API}/api/tareas/seccion/${seccionId}`, {
-      headers: { Authorization: `Bearer ${token}` }
-    })
-      .then(r => r.json())
-      .then(data => { setTareas(Array.isArray(data) ? data : []); setCargando(false); })
-      .catch(() => setCargando(false));
-  }, [seccionId]);
-
-  const getDeadlineStatus = (fechaEntrega: string) => {
-    const now = new Date();
-    const deadline = new Date(fechaEntrega);
-    const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) return { label: 'Vencida', cls: 'bg-rose-100 text-rose-700', icon: XCircle };
-    if (diffDays === 0) return { label: 'Vence hoy', cls: 'bg-rose-100 text-rose-700', icon: AlertCircle };
-    if (diffDays <= 3) return { label: `Vence en ${diffDays} día${diffDays > 1 ? 's' : ''}`, cls: 'bg-amber-100 text-amber-700', icon: AlertCircle };
-    return { label: `${diffDays} días restantes`, cls: 'bg-slate-100 text-slate-600', icon: Clock };
-  };
-
-  if (!seccionId) return (
-    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-      <FileQuestion className="w-12 h-12 mb-3 opacity-30" />
-      <p className="font-semibold">Sin sección asignada</p>
-      <p className="text-xs mt-1">Las tareas aparecerán cuando tengas una matrícula activa.</p>
-    </div>
-  );
-
-  if (cargando) return (
-    <div className="flex items-center justify-center py-20 text-slate-400">
-      <div className="w-6 h-6 border-2 border-cyan-500/30 border-t-cyan-500 rounded-full animate-spin mr-3" />
-      <span className="text-sm font-medium">Cargando tareas...</span>
-    </div>
-  );
-
-  if (tareas.length === 0) return (
-    <div className="flex flex-col items-center justify-center py-20 text-slate-400">
-      <ClipboardList className="w-12 h-12 mb-3 opacity-30" />
-      <p className="font-semibold">Sin tareas asignadas</p>
-      <p className="text-xs mt-1">Tus docentes aún no han publicado tareas.</p>
-    </div>
-  );
-
-  const proximas = tareas.filter(t => {
-    const diff = Math.ceil((new Date(t.fecha_entrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    return diff >= 0;
-  });
-  const vencidas = tareas.filter(t => {
-    const diff = Math.ceil((new Date(t.fecha_entrega).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-    return diff < 0;
-  });
-
-  const TareaCard = ({ tarea }: { tarea: TareaEstudiante }) => {
-    const deadline = getDeadlineStatus(tarea.fecha_entrega);
-    const DeadlineIcon = deadline.icon;
-    const abierta = expandida === tarea.id;
-
-    return (
-      <div className={`bg-white border rounded-2xl overflow-hidden transition-all shadow-sm ${abierta ? 'border-cyan-300 ring-2 ring-cyan-100' : 'border-slate-200'}`}>
-        <button
-          className="w-full flex items-start gap-4 p-5 text-left hover:bg-slate-50/50 transition-colors"
-          onClick={() => setExpandida(abierta ? null : tarea.id)}
-        >
-          <div className={`mt-0.5 w-8 h-8 rounded-xl flex items-center justify-center shrink-0 ${TIPO_COLORS_EST[tarea.tipo] ?? 'bg-slate-100 text-slate-600'}`}>
-            <FileText className="w-4 h-4" />
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex flex-wrap items-center gap-2 mb-1">
-              <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TIPO_COLORS_EST[tarea.tipo] ?? 'bg-slate-100 text-slate-600'}`}>
-                {tarea.tipo}
-              </span>
-              <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full ${deadline.cls}`}>
-                <DeadlineIcon className="w-3 h-3" /> {deadline.label}
-              </span>
-            </div>
-            <p className="font-bold text-slate-900 text-sm leading-snug">{tarea.titulo}</p>
-            {tarea.descripcion && !abierta && (
-              <p className="text-xs text-slate-500 mt-1 line-clamp-1">{tarea.descripcion}</p>
-            )}
-            <div className="flex items-center gap-3 mt-2 text-[11px] text-slate-400">
-              <span className="flex items-center gap-1">
-                <Calendar className="w-3 h-3" />
-                Entrega: {new Date(tarea.fecha_entrega).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' })}
-              </span>
-              <span>·</span>
-              <span>{tarea.docente?.usuario?.nombre_completo}</span>
-            </div>
-          </div>
-          {abierta ? <ChevronDown className="w-4 h-4 text-slate-400 shrink-0 mt-1" /> : <ChevronRight className="w-4 h-4 text-slate-400 shrink-0 mt-1" />}
-        </button>
-
-        <AnimatePresence>
-          {abierta && (
-            <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.2 }}
-              className="overflow-hidden"
-            >
-              <div className="px-5 pb-5 space-y-3 border-t border-slate-100 pt-4">
-                {tarea.descripcion && (
-                  <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1">Descripción</p>
-                    <p className="text-sm text-slate-700 leading-relaxed">{tarea.descripcion}</p>
-                  </div>
-                )}
-                {tarea.instrucciones ? (
-                  <div className="bg-cyan-50 border border-cyan-200 rounded-xl p-4">
-                    <p className="text-[10px] font-bold text-cyan-600 uppercase tracking-wide mb-2 flex items-center gap-1">
-                      <FileText className="w-3 h-3" /> Instrucciones
-                    </p>
-                    <p className="text-sm text-cyan-900 whitespace-pre-wrap leading-relaxed">{tarea.instrucciones}</p>
-                  </div>
-                ) : (
-                  <p className="text-xs text-slate-400 italic">El docente no agregó instrucciones adicionales.</p>
-                )}
-                <div className="flex items-center gap-2 text-xs text-slate-500 pt-1">
-                  <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                  Asignada el {new Date(tarea.fecha_asignacion).toLocaleDateString('es-DO', { day: '2-digit', month: 'long', year: 'numeric' })}
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    );
-  };
-
-  return (
-    <div className="space-y-6">
-      {proximas.length > 0 && (
-        <section>
-          <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <Clock className="w-3.5 h-3.5" /> Pendientes ({proximas.length})
-          </h3>
-          <div className="space-y-3">
-            {proximas.map(t => <TareaCard key={t.id} tarea={t} />)}
-          </div>
-        </section>
-      )}
-      {vencidas.length > 0 && (
-        <section>
-          <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-            <XCircle className="w-3.5 h-3.5 text-rose-400" /> Vencidas ({vencidas.length})
-          </h3>
-          <div className="space-y-3 opacity-70">
-            {vencidas.map(t => <TareaCard key={t.id} tarea={t} />)}
-          </div>
-        </section>
-      )}
-    </div>
-  );
-}
-
 /* ─── COMPONENTE PRINCIPAL ─── */
 export default function StudentPortal() {
   const [vista, setVista] = useState<Vista>('dashboard');
@@ -754,22 +573,17 @@ export default function StudentPortal() {
 
   const tieneFCT = perfil.evaluaciones_fct.length > 0;
 
-  const seccionActiva = perfil.matriculas.find(m => m.periodo.es_activo)?.seccion;
-  const seccionId = (seccionActiva as any)?.id ?? null;
-
   const navItems: { id: Vista; icon: any; label: string }[] = [
     { id: 'dashboard', icon: User, label: 'Mi Perfil' },
-    { id: 'tareas', icon: ClipboardList, label: 'Mis Tareas' },
     { id: 'calificaciones', icon: BookMarked, label: 'Módulos y RAs' },
     { id: 'asignaturas', icon: BookOpen, label: 'Asignaturas' },
-    { id: 'anecdotas', icon: Activity, label: 'Anotaciones' },
+    { id: 'anecdotas', icon: ClipboardList, label: 'Anotaciones' },
     { id: 'boletin', icon: FileText, label: 'Mi Boletín' },
     ...(tieneFCT ? [{ id: 'fct' as Vista, icon: Briefcase, label: 'FCT / Pasantía' }] : []),
   ];
 
   const titulo: Record<Vista, string> = {
     dashboard: 'Mi Perfil',
-    tareas: 'Mis Tareas',
     calificaciones: 'Módulos y Resultados de Aprendizaje',
     asignaturas: 'Asignaturas Académicas',
     anecdotas: 'Registro de Anotaciones',
@@ -821,7 +635,6 @@ export default function StudentPortal() {
           transition={{ duration: 0.2 }}
         >
           {vista === 'dashboard' && <VistaDashboard p={perfil} />}
-          {vista === 'tareas' && <VistaTareas seccionId={seccionId} />}
           {vista === 'calificaciones' && <VistaCalificaciones p={perfil} />}
           {vista === 'asignaturas' && <VistaAsignaturas p={perfil} />}
           {vista === 'anecdotas' && <VistaAnecdotas p={perfil} />}

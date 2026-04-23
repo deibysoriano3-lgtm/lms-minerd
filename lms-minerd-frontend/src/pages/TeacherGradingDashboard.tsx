@@ -1,34 +1,12 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import axios from 'axios';
 import {
     BookOpen, AlertTriangle, CheckCircle, Clock,
-    FolderOpen, ChevronRight, BarChart2, Layers,
-    ClipboardList, Plus, Pencil, Trash2, X, Calendar, FileText
+    FolderOpen, ChevronRight, BarChart2, Layers
 } from 'lucide-react';
 import PlanDeMejoraModal from '../components/PlanDeMejoraModal';
 
-const API = 'http://localhost:3000';
-
-type VistaActiva = 'evaluacion' | 'modulos' | 'observaciones' | 'resumen' | 'tareas';
-
-interface Tarea {
-    id: number;
-    titulo: string;
-    descripcion: string;
-    instrucciones?: string;
-    tipo: string;
-    fecha_asignacion: string;
-    fecha_entrega: string;
-    estado: string;
-    seccion: { id: number; nombre: string; grado: string };
-}
-
-const TIPO_COLORS: Record<string, string> = {
-    TAREA: 'bg-indigo-100 text-indigo-700',
-    ACTIVIDAD: 'bg-emerald-100 text-emerald-700',
-    EXAMEN: 'bg-rose-100 text-rose-700',
-    PROYECTO: 'bg-amber-100 text-amber-700',
-};
+type VistaActiva = 'evaluacion' | 'modulos' | 'observaciones' | 'resumen';
 
 // ── Toast notification ─────────────────────────────────────────
 function Toast({ msg, ok }: { msg: string; ok: boolean }) {
@@ -57,18 +35,6 @@ export default function TeacherGradingDashboard() {
     const [estudianteActivoModal, setEstudianteActivoModal] = useState<any>(null);
     const [anecdotarioForm, setAnecdotarioForm] = useState<{ [key: number]: { tipo: string; incidencia: string } }>({});
     const [resumenData, setResumenData] = useState<{ ras: any[]; estudiantes: any[] } | null>(null);
-
-    // Tareas state
-    const [tareas, setTareas] = useState<Tarea[]>([]);
-    const [editingDateId, setEditingDateId] = useState<number | null>(null);
-    const [editingFullId, setEditingFullId] = useState<number | null>(null);
-    const [showCrearTarea, setShowCrearTarea] = useState(false);
-    const [nuevaTarea, setNuevaTarea] = useState({
-        titulo: '', descripcion: '', instrucciones: '',
-        tipo: 'TAREA', fecha_entrega: '', seccion_id: ''
-    });
-    const [editForm, setEditForm] = useState<Partial<Tarea & { fecha_entrega: string }>>({});
-    const dateInputRef = useRef<HTMLInputElement>(null);
 
     const showToast = (msg: string, ok: boolean) => {
         setToast({ msg, ok });
@@ -217,97 +183,6 @@ export default function TeacherGradingDashboard() {
     };
 
     const getSumaTotalMF = (est: any) => est.calificaciones.reduce((acc: number, cur: any) => acc + cur.valor_logrado, 0);
-
-    const fetchTareas = async () => {
-        try {
-            const token = localStorage.getItem('lms_minerd_token');
-            const res = await axios.get(`${API}/api/tareas/mis-tareas`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setTareas(res.data);
-        } catch {
-            showToast('Error cargando tareas.', false);
-        }
-    };
-
-    const handleCrearTarea = async () => {
-        if (!nuevaTarea.titulo.trim() || !nuevaTarea.fecha_entrega || !nuevaTarea.seccion_id) {
-            showToast('Completa título, fecha de entrega y sección.', false);
-            return;
-        }
-        setSaving(true);
-        try {
-            const token = localStorage.getItem('lms_minerd_token');
-            await axios.post(`${API}/api/tareas`, {
-                ...nuevaTarea,
-                seccion_id: Number(nuevaTarea.seccion_id)
-            }, { headers: { Authorization: `Bearer ${token}` } });
-            showToast('Tarea creada correctamente.', true);
-            setShowCrearTarea(false);
-            setNuevaTarea({ titulo: '', descripcion: '', instrucciones: '', tipo: 'TAREA', fecha_entrega: '', seccion_id: '' });
-            fetchTareas();
-        } catch {
-            showToast('Error al crear la tarea.', false);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleActualizarFecha = async (tareaId: number, nuevaFecha: string) => {
-        if (!nuevaFecha) return;
-        try {
-            const token = localStorage.getItem('lms_minerd_token');
-            await axios.patch(`${API}/api/tareas/${tareaId}/fecha-entrega`,
-                { fecha_entrega: nuevaFecha },
-                { headers: { Authorization: `Bearer ${token}` } }
-            );
-            setTareas(prev => prev.map(t => t.id === tareaId ? { ...t, fecha_entrega: nuevaFecha } : t));
-            showToast('Fecha de entrega actualizada.', true);
-        } catch {
-            showToast('Error al actualizar la fecha.', false);
-        }
-        setEditingDateId(null);
-    };
-
-    const handleActualizarTarea = async (tareaId: number) => {
-        setSaving(true);
-        try {
-            const token = localStorage.getItem('lms_minerd_token');
-            await axios.patch(`${API}/api/tareas/${tareaId}`, editForm, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            showToast('Tarea actualizada.', true);
-            setEditingFullId(null);
-            fetchTareas();
-        } catch {
-            showToast('Error al actualizar la tarea.', false);
-        } finally {
-            setSaving(false);
-        }
-    };
-
-    const handleEliminarTarea = async (tareaId: number) => {
-        if (!window.confirm('¿Eliminar esta tarea?')) return;
-        try {
-            const token = localStorage.getItem('lms_minerd_token');
-            await axios.delete(`${API}/api/tareas/${tareaId}`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
-            setTareas(prev => prev.filter(t => t.id !== tareaId));
-            showToast('Tarea eliminada.', true);
-        } catch {
-            showToast('Error al eliminar la tarea.', false);
-        }
-    };
-
-    const getDeadlineStatus = (fechaEntrega: string) => {
-        const now = new Date();
-        const deadline = new Date(fechaEntrega);
-        const diffDays = Math.ceil((deadline.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays < 0) return { label: 'Vencida', cls: 'bg-rose-100 text-rose-700 border-rose-200' };
-        if (diffDays <= 2) return { label: `Vence en ${diffDays}d`, cls: 'bg-amber-100 text-amber-700 border-amber-200' };
-        return { label: `${diffDays} días`, cls: 'bg-slate-100 text-slate-600 border-slate-200' };
-    };
 
     const handdleSendObservacion = async (estudiante_id: number) => {
         const form = anecdotarioForm[estudiante_id];
@@ -756,276 +631,6 @@ export default function TeacherGradingDashboard() {
         </div>
     );
 
-    // ── VISTA: Tareas ─────────────────────────────────────────────
-    const RenderTareas = () => {
-        const seccionesUnicas = Array.from(
-            new Map(cargas.map(c => [c.seccion_id, c.seccion])).values()
-        );
-
-        return (
-            <div className="animate-in fade-in duration-300 space-y-6">
-                <header className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 border-b border-slate-200 pb-5">
-                    <div>
-                        <h1 className="text-2xl font-bold text-slate-900">Gestión de Tareas</h1>
-                        <p className="text-slate-500 mt-1 text-sm">Crea y gestiona tareas para tus secciones. Haz clic en la fecha para editarla.</p>
-                    </div>
-                    <button
-                        onClick={() => { setShowCrearTarea(true); fetchTareas(); }}
-                        className="shrink-0 flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-sm transition"
-                    >
-                        <Plus className="w-4 h-4" /> Nueva Tarea
-                    </button>
-                </header>
-
-                {/* Modal Crear Tarea */}
-                {showCrearTarea && (
-                    <div className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4">
-                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg p-6 animate-in fade-in zoom-in-95 duration-200">
-                            <div className="flex items-center justify-between mb-5">
-                                <h2 className="text-lg font-bold text-slate-900">Nueva Tarea</h2>
-                                <button onClick={() => setShowCrearTarea(false)} className="text-slate-400 hover:text-slate-700">
-                                    <X className="w-5 h-5" />
-                                </button>
-                            </div>
-                            <div className="space-y-4">
-                                <div className="grid grid-cols-2 gap-3">
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Título *</label>
-                                        <input
-                                            value={nuevaTarea.titulo}
-                                            onChange={e => setNuevaTarea(p => ({ ...p, titulo: e.target.value }))}
-                                            placeholder="Ej: Investigación sobre redes LAN"
-                                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30 focus:border-indigo-400"
-                                        />
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Tipo</label>
-                                        <select
-                                            value={nuevaTarea.tipo}
-                                            onChange={e => setNuevaTarea(p => ({ ...p, tipo: e.target.value }))}
-                                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30 bg-white"
-                                        >
-                                            <option value="TAREA">Tarea</option>
-                                            <option value="ACTIVIDAD">Actividad</option>
-                                            <option value="EXAMEN">Examen</option>
-                                            <option value="PROYECTO">Proyecto</option>
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Fecha de entrega *</label>
-                                        <input
-                                            type="date"
-                                            value={nuevaTarea.fecha_entrega}
-                                            onChange={e => setNuevaTarea(p => ({ ...p, fecha_entrega: e.target.value }))}
-                                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30"
-                                        />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Sección *</label>
-                                        <select
-                                            value={nuevaTarea.seccion_id}
-                                            onChange={e => setNuevaTarea(p => ({ ...p, seccion_id: e.target.value }))}
-                                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30 bg-white"
-                                        >
-                                            <option value="">— Seleccionar sección —</option>
-                                            {seccionesUnicas.map((s: any) => (
-                                                <option key={s.id} value={s.id}>{s.grado} · {s.nombre}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Descripción</label>
-                                        <textarea
-                                            value={nuevaTarea.descripcion}
-                                            onChange={e => setNuevaTarea(p => ({ ...p, descripcion: e.target.value }))}
-                                            placeholder="Describe brevemente la tarea..."
-                                            rows={2}
-                                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30 resize-none"
-                                        />
-                                    </div>
-                                    <div className="col-span-2">
-                                        <label className="block text-xs font-bold text-slate-600 mb-1 uppercase tracking-wide">Instrucciones (contenido para estudiantes)</label>
-                                        <textarea
-                                            value={nuevaTarea.instrucciones}
-                                            onChange={e => setNuevaTarea(p => ({ ...p, instrucciones: e.target.value }))}
-                                            placeholder="Detalla los pasos, materiales o criterios de evaluación..."
-                                            rows={4}
-                                            className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30 resize-none"
-                                        />
-                                    </div>
-                                </div>
-                                <div className="flex gap-3 pt-2">
-                                    <button onClick={() => setShowCrearTarea(false)} className="flex-1 py-2.5 rounded-xl border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50">
-                                        Cancelar
-                                    </button>
-                                    <button
-                                        onClick={handleCrearTarea}
-                                        disabled={saving}
-                                        className="flex-1 py-2.5 rounded-xl bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 disabled:opacity-50"
-                                    >
-                                        {saving ? 'Guardando...' : 'Crear Tarea'}
-                                    </button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                )}
-
-                {/* Lista de tareas */}
-                {tareas.length === 0 ? (
-                    <div className="bg-slate-50 border border-dashed border-slate-300 rounded-xl p-12 text-center text-slate-400">
-                        <ClipboardList className="w-8 h-8 mx-auto mb-3 opacity-30" />
-                        <p className="font-semibold">Sin tareas creadas aún</p>
-                        <p className="text-xs mt-1">Haz clic en "Nueva Tarea" para comenzar.</p>
-                    </div>
-                ) : (
-                    <div className="space-y-3">
-                        {tareas.map(tarea => {
-                            const deadline = getDeadlineStatus(tarea.fecha_entrega);
-                            const isEditingFull = editingFullId === tarea.id;
-                            return (
-                                <div key={tarea.id} className={`bg-white rounded-xl border shadow-sm transition-all ${isEditingFull ? 'border-indigo-300 ring-2 ring-indigo-100' : 'border-slate-200'}`}>
-                                    {isEditingFull ? (
-                                        // ── Modo edición completa ──
-                                        <div className="p-5 space-y-3">
-                                            <div className="flex items-center justify-between mb-1">
-                                                <p className="text-xs font-bold text-indigo-600 uppercase tracking-wide">Editando tarea</p>
-                                                <button onClick={() => setEditingFullId(null)} className="text-slate-400 hover:text-slate-700"><X className="w-4 h-4" /></button>
-                                            </div>
-                                            <input
-                                                value={editForm.titulo ?? ''}
-                                                onChange={e => setEditForm(p => ({ ...p, titulo: e.target.value }))}
-                                                className="w-full text-sm font-bold border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30"
-                                                placeholder="Título"
-                                            />
-                                            <div className="grid grid-cols-2 gap-3">
-                                                <select
-                                                    value={editForm.tipo ?? 'TAREA'}
-                                                    onChange={e => setEditForm(p => ({ ...p, tipo: e.target.value }))}
-                                                    className="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none bg-white focus:ring-2 focus:ring-indigo-400/30"
-                                                >
-                                                    <option value="TAREA">Tarea</option>
-                                                    <option value="ACTIVIDAD">Actividad</option>
-                                                    <option value="EXAMEN">Examen</option>
-                                                    <option value="PROYECTO">Proyecto</option>
-                                                </select>
-                                                <input
-                                                    type="date"
-                                                    value={editForm.fecha_entrega ? editForm.fecha_entrega.slice(0, 10) : ''}
-                                                    onChange={e => setEditForm(p => ({ ...p, fecha_entrega: e.target.value }))}
-                                                    className="text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30"
-                                                />
-                                            </div>
-                                            <textarea
-                                                value={editForm.descripcion ?? ''}
-                                                onChange={e => setEditForm(p => ({ ...p, descripcion: e.target.value }))}
-                                                rows={2}
-                                                placeholder="Descripción..."
-                                                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30 resize-none"
-                                            />
-                                            <textarea
-                                                value={editForm.instrucciones ?? ''}
-                                                onChange={e => setEditForm(p => ({ ...p, instrucciones: e.target.value }))}
-                                                rows={3}
-                                                placeholder="Instrucciones para los estudiantes..."
-                                                className="w-full text-sm border border-slate-200 rounded-lg px-3 py-2 outline-none focus:ring-2 focus:ring-indigo-400/30 resize-none"
-                                            />
-                                            <div className="flex gap-2 pt-1">
-                                                <button onClick={() => setEditingFullId(null)} className="px-4 py-2 rounded-lg border border-slate-200 text-slate-600 text-sm font-bold hover:bg-slate-50">
-                                                    Cancelar
-                                                </button>
-                                                <button onClick={() => handleActualizarTarea(tarea.id)} disabled={saving} className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-sm font-bold hover:bg-indigo-700 disabled:opacity-50">
-                                                    {saving ? 'Guardando...' : 'Guardar cambios'}
-                                                </button>
-                                            </div>
-                                        </div>
-                                    ) : (
-                                        // ── Vista normal ──
-                                        <div className="p-5">
-                                            <div className="flex items-start gap-3">
-                                                <div className="flex-1 min-w-0">
-                                                    <div className="flex flex-wrap items-center gap-2 mb-1.5">
-                                                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${TIPO_COLORS[tarea.tipo] ?? 'bg-slate-100 text-slate-600'}`}>
-                                                            {tarea.tipo}
-                                                        </span>
-                                                        <span className="text-[10px] text-slate-400 font-medium">
-                                                            {tarea.seccion.grado} · Sec. {tarea.seccion.nombre}
-                                                        </span>
-                                                    </div>
-                                                    <h3 className="font-bold text-slate-900 leading-snug">{tarea.titulo}</h3>
-                                                    {tarea.descripcion && (
-                                                        <p className="text-sm text-slate-500 mt-1 leading-relaxed">{tarea.descripcion}</p>
-                                                    )}
-                                                    {tarea.instrucciones && (
-                                                        <div className="mt-3 bg-slate-50 rounded-lg p-3 border border-slate-100">
-                                                            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1 flex items-center gap-1">
-                                                                <FileText className="w-3 h-3" /> Instrucciones para estudiantes
-                                                            </p>
-                                                            <p className="text-xs text-slate-600 whitespace-pre-wrap leading-relaxed">{tarea.instrucciones}</p>
-                                                        </div>
-                                                    )}
-                                                </div>
-                                                <div className="flex items-center gap-1.5 shrink-0">
-                                                    <button
-                                                        onClick={() => { setEditingFullId(tarea.id); setEditForm({ ...tarea, fecha_entrega: tarea.fecha_entrega.slice(0, 10) }); }}
-                                                        className="p-1.5 rounded-lg text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition"
-                                                    >
-                                                        <Pencil className="w-3.5 h-3.5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={() => handleEliminarTarea(tarea.id)}
-                                                        className="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition"
-                                                    >
-                                                        <Trash2 className="w-3.5 h-3.5" />
-                                                    </button>
-                                                </div>
-                                            </div>
-
-                                            {/* Fecha de entrega — edición inline */}
-                                            <div className="flex items-center gap-3 mt-4 pt-3 border-t border-slate-100">
-                                                <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-                                                <span className="text-xs text-slate-500 font-medium shrink-0">Fecha de entrega:</span>
-                                                {editingDateId === tarea.id ? (
-                                                    <div className="flex items-center gap-2">
-                                                        <input
-                                                            ref={dateInputRef}
-                                                            type="date"
-                                                            defaultValue={tarea.fecha_entrega.slice(0, 10)}
-                                                            autoFocus
-                                                            onBlur={e => handleActualizarFecha(tarea.id, e.target.value)}
-                                                            onKeyDown={e => {
-                                                                if (e.key === 'Enter') handleActualizarFecha(tarea.id, (e.target as HTMLInputElement).value);
-                                                                if (e.key === 'Escape') setEditingDateId(null);
-                                                            }}
-                                                            className="text-sm border-2 border-indigo-400 rounded-lg px-2 py-1 outline-none focus:ring-2 focus:ring-indigo-400/30 bg-indigo-50"
-                                                        />
-                                                        <button onClick={() => setEditingDateId(null)} className="text-slate-400 hover:text-slate-600">
-                                                            <X className="w-3.5 h-3.5" />
-                                                        </button>
-                                                    </div>
-                                                ) : (
-                                                    <button
-                                                        onClick={() => setEditingDateId(tarea.id)}
-                                                        className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2.5 py-1 rounded-lg border transition-all hover:opacity-80 hover:scale-[1.02] cursor-pointer ${deadline.cls}`}
-                                                        title="Haz clic para cambiar la fecha"
-                                                    >
-                                                        <Pencil className="w-2.5 h-2.5 opacity-60" />
-                                                        {new Date(tarea.fecha_entrega).toLocaleDateString('es-DO', { day: '2-digit', month: 'short', year: 'numeric' })}
-                                                        <span className="opacity-60 font-normal">· {deadline.label}</span>
-                                                    </button>
-                                                )}
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
-            </div>
-        );
-    };
-
     const esAcademica = !!cargaActiva?.asignatura_academica;
     const nombreClaseActiva = cargaActiva
         ? (esAcademica ? cargaActiva.asignatura_academica?.nombre : cargaActiva.modulo_formativo?.nombre)
@@ -1081,7 +686,7 @@ export default function TeacherGradingDashboard() {
                         Ver Resumen
                     </button>
 
-                    <div className="pt-3 mt-2 border-t border-slate-100 space-y-0.5">
+                    <div className="pt-3 mt-2 border-t border-slate-100">
                         <button
                             onClick={() => setVistaActiva('observaciones')}
                             className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors
@@ -1089,19 +694,6 @@ export default function TeacherGradingDashboard() {
                         >
                             <FolderOpen className={`w-4 h-4 shrink-0 ${vistaActiva === 'observaciones' ? 'text-indigo-600' : 'text-slate-400'}`} />
                             Anotaciones
-                        </button>
-                        <button
-                            onClick={() => { setVistaActiva('tareas'); fetchTareas(); }}
-                            className={`w-full flex items-center gap-3 px-3 py-2.5 text-sm font-medium rounded-lg transition-colors
-                                ${vistaActiva === 'tareas' ? 'bg-indigo-50 text-indigo-700' : 'text-slate-700 hover:bg-slate-100'}`}
-                        >
-                            <ClipboardList className={`w-4 h-4 shrink-0 ${vistaActiva === 'tareas' ? 'text-indigo-600' : 'text-slate-400'}`} />
-                            Tareas
-                            {tareas.length > 0 && (
-                                <span className="ml-auto text-[10px] font-bold bg-indigo-100 text-indigo-600 px-1.5 py-0.5 rounded-full">
-                                    {tareas.length}
-                                </span>
-                            )}
                         </button>
                     </div>
                 </nav>
@@ -1131,7 +723,6 @@ export default function TeacherGradingDashboard() {
                     {vistaActiva === 'evaluacion' && (esAcademica ? RenderEvaluacionAcademica() : RenderEvaluacion())}
                     {vistaActiva === 'observaciones' && RenderObservaciones()}
                     {vistaActiva === 'resumen' && RenderResumen()}
-                    {vistaActiva === 'tareas' && RenderTareas()}
                 </div>
             </main>
 

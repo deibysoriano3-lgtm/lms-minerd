@@ -58,7 +58,6 @@ model Seccion {
   grado             String
   cargas_academicas CargaAcademica[]
   matriculas        MatriculaEstudiante[]
-  tareas            Tarea[]
   carrera           CarreraTecnica        @relation(fields: [carrera_id], references: [id])
 }
 
@@ -105,7 +104,6 @@ model DocentePerfil {
   calificaciones_ra    CalificacionRA[]
   calificaciones_acad  CalificacionAcademica[]
   cargas_academicas    CargaAcademica[]
-  tareas               Tarea[]
   usuario              Usuario              @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   anecdotas_creadas    RegistroAnecdotico[]
 }
@@ -241,21 +239,4 @@ model EvaluacionFCT {
   estado           String           @default("ENVIADO") // ENVIADO | APROBADO
   creado_en        DateTime         @default(now())
   estudiante       EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
-}
-
-model Tarea {
-  id               Int           @id @default(autoincrement())
-  titulo           String
-  descripcion      String
-  instrucciones    String?
-  tipo             String        @default("TAREA") // TAREA | ACTIVIDAD | EXAMEN | PROYECTO
-  fecha_asignacion DateTime      @default(now())
-  fecha_entrega    DateTime
-  seccion_id       Int
-  carga_id         Int?
-  docente_id       Int
-  estado           String        @default("ACTIVA") // ACTIVA | CERRADA
-  creado_en        DateTime      @default(now())
-  seccion          Seccion       @relation(fields: [seccion_id], references: [id])
-  docente          DocentePerfil @relation(fields: [docente_id], references: [id])
 }
