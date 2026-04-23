@@ -8,9 +8,10 @@ import { MatriculaModule } from './modules/matricula/matricula.module';
 import { ReportesModule } from './modules/reportes/reportes.module';
 import { EvaluacionesModule } from './modules/evaluaciones/evaluaciones.module';
 import { CurriculumModule } from './modules/curriculum/curriculum.module';
+import { TareasModule } from './modules/tareas/tareas.module';
 
 @Module({
-  imports: [DocentesModule, AuthModule, EstudiantesModule, MatriculaModule, ReportesModule, EvaluacionesModule, CurriculumModule],
+  imports: [DocentesModule, AuthModule, EstudiantesModule, MatriculaModule, ReportesModule, EvaluacionesModule, CurriculumModule, TareasModule],
   controllers: [AppController],
   providers: [AppService],
 })

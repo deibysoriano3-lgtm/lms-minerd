@@ -276,20 +276,26 @@ function AnimatedRoutes({ userRole, userName }: { userRole: 'ADMIN' | 'DOCENTE' 
 }
 
 function MainApp() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE' | null>(null);
-  const [userName, setUserName] = useState('');
+  const saved = (() => {
+    try { return JSON.parse(localStorage.getItem('lms_minerd_session') || 'null'); } catch { return null; }
+  })();
+  const [isAuthenticated, setIsAuthenticated] = useState(!!saved?.rol && !!localStorage.getItem('lms_minerd_token'));
+  const [userRole, setUserRole] = useState<'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE' | null>(saved?.rol ?? null);
+  const [userName, setUserName] = useState(saved?.nombre ?? '');
 
   const handleLogin = (rol: 'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE', nombre: string) => {
     setUserRole(rol);
     setUserName(nombre);
     setIsAuthenticated(true);
+    localStorage.setItem('lms_minerd_session', JSON.stringify({ rol, nombre }));
   };
 
   const handleLogout = () => {
     setIsAuthenticated(false);
     setUserRole(null);
     setUserName('');
+    localStorage.removeItem('lms_minerd_session');
+    localStorage.removeItem('lms_minerd_token');
   };
 
   return (
