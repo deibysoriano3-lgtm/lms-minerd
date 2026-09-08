@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import api from '../api';
+import api, { API_BASE_URL } from '../api';
 import {
     BookOpen, AlertTriangle, CheckCircle, Clock,
     FolderOpen, ChevronRight, BarChart2, Layers,
@@ -82,7 +82,7 @@ export default function TeacherGradingDashboard() {
                 } else if (error.response?.status === 404) {
                     setErrorMsg('Su cuenta no tiene perfil Docente o Carga Académica asignada.');
                 } else if (error.message === 'Network Error') {
-                    setErrorMsg('Error de red. Verifique que el servidor esté activo en localhost:3000.');
+                    setErrorMsg('Error de red. Verifique que el servidor esté activo.');
                 } else {
                     setErrorMsg('Error del servidor: ' + (error.response?.data?.message || error.message));
                 }
@@ -908,7 +908,7 @@ export default function TeacherGradingDashboard() {
                         </h3>
                         <div className="grid sm:grid-cols-2 gap-3">
                             {documentosHorario.map((d: any) => (
-                                <a key={d.id} href={`http://localhost:3000/uploads/horarios/${d.filename}`} target="_blank" rel="noreferrer"
+                                <a key={d.id} href={`${API_BASE_URL}/uploads/horarios/${d.filename}`} target="_blank" rel="noreferrer"
                                     className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-violet-300 hover:bg-violet-50 transition-colors">
                                     <CalendarDays className="w-5 h-5 text-violet-600 shrink-0" />
                                     <div className="min-w-0">

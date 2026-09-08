@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-import api from '../api';
+import api, { API_BASE_URL } from '../api';
 import CalendarioAcademico from '../components/CalendarioAcademico';
 
 type Vista = 'dashboard' | 'calificaciones' | 'asignaturas' | 'anecdotas' | 'boletin' | 'fct' | 'tareas' | 'horario' | 'asistencia' | 'calendario';
@@ -670,7 +670,7 @@ function VistaHorario({ miHorario, setMiHorario, docsHorario, setDocsHorario, ca
           </h3>
           <div className="grid sm:grid-cols-2 gap-3">
             {docsHorario.map((d: any) => (
-              <a key={d.id} href={`http://localhost:3000/uploads/horarios/${d.filename}`} target="_blank" rel="noreferrer"
+              <a key={d.id} href={`${API_BASE_URL}/uploads/horarios/${d.filename}`} target="_blank" rel="noreferrer"
                 className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-xl hover:border-violet-300 hover:bg-violet-50 transition-colors">
                 <CalendarDays className="w-5 h-5 text-violet-600 shrink-0" />
                 <div className="min-w-0">

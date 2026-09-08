@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { FormEvent } from 'react';
 import { ShieldCheck, Lock, User, Eye, EyeOff, Building, AlertCircle, BookOpen } from 'lucide-react';
+import { API_BASE_URL } from '../api';
 import { motion } from 'framer-motion';
 
 interface LoginProps {
@@ -20,7 +21,7 @@ export default function LoginScreen({ onLoginExitoso }: LoginProps) {
         setIsLoading(true);
 
         try {
-            const res = await fetch('http://localhost:3000/api/auth/login', {
+            const res = await fetch(`${API_BASE_URL}/api/auth/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })

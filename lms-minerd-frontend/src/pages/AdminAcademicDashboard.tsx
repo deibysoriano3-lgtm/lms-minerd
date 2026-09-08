@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import api from '../api';
+import api, { API_BASE_URL } from '../api';
 import { Search, Plus, Edit, FileText, Briefcase, Trash2, LayoutList, Loader2, X, GraduationCap, Users, BookOpen, CheckCircle2, ClipboardList, LayoutGrid, CalendarDays, Upload, Clock, Eye } from 'lucide-react';
 import CalendarioAcademico from '../components/CalendarioAcademico';
 
@@ -695,7 +695,7 @@ export default function AdminAcademicDashboard() {
                                         </div>
                                         {d.descripcion && <p className="text-xs text-slate-500">{d.descripcion}</p>}
                                         <p className="text-xs text-slate-400">{new Date(d.creado_en).toLocaleDateString('es-DO')}</p>
-                                        <a href={`http://localhost:3000/uploads/horarios/${d.filename}`} target="_blank" rel="noreferrer"
+                                        <a href={`${API_BASE_URL}/uploads/horarios/${d.filename}`} target="_blank" rel="noreferrer"
                                             className="flex items-center gap-1.5 text-xs font-semibold text-violet-600 hover:text-violet-800 transition-colors mt-1">
                                             <Eye className="w-3.5 h-3.5" /> Ver documento
                                         </a>
