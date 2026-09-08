@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../api';
 import { Printer, ArrowLeft, Loader2 } from 'lucide-react';
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -45,10 +45,7 @@ export default function BoletinCalificaciones() {
     useEffect(() => {
         const load = async () => {
             try {
-                const token = localStorage.getItem('lms_minerd_token');
-                const res = await axios.get(`http://localhost:3000/api/estudiantes/${id}/boletin`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                const res = await api.get(`/api/estudiantes/${id}/boletin`);
                 setDatos(res.data);
             } catch {
                 setError('No se pudo cargar el boletín. Verifique que el estudiante exista y el servidor esté activo.');
@@ -279,67 +276,66 @@ export default function BoletinCalificaciones() {
 
                         {/* ── SECCIÓN ASIGNATURAS ── */}
                         <div>
-                            <div className="bg-slate-800 text-white text-center text-[8px] font-bold py-0.5 mb-0">ASIGNATURAS</div>
-                            <table className="w-full border-collapse text-[7.5px]">
+                            <div className="bg-slate-800 text-white text-center text-[8px] font-bold py-0.5 mb-0">CALIFICACIONES POR COMPETENCIAS</div>
+                            <table className="w-full border-collapse text-[6.5px]">
                                 <thead>
+                                    {/* Fila 1: nombre de competencias */}
+                                    <tr>
+                                        <th className="border border-slate-300 px-1 py-0.5 text-left font-bold bg-slate-100" rowSpan={2}>Asignatura</th>
+                                        {ORDEN_AREAS.map(area => (
+                                            <th key={area} colSpan={4} className="border border-slate-400 px-1 py-0.5 text-center font-bold bg-slate-700 text-white text-[6px] uppercase tracking-wide">
+                                                {area}
+                                            </th>
+                                        ))}
+                                    </tr>
+                                    {/* Fila 2: P1 P2 P3 P4 por cada competencia */}
                                     <tr className="bg-slate-100">
-                                        <th className="border border-slate-300 px-1 py-0.5 text-left font-bold">Asignatura</th>
-                                        <th className="border border-slate-300 px-1 py-0.5 text-center font-bold" title="Primer Período">P1</th>
-                                        <th className="border border-slate-300 px-1 py-0.5 text-center font-bold" title="Segundo Período">P2</th>
-                                        <th className="border border-slate-300 px-1 py-0.5 text-center font-bold bg-slate-200" title="Promedio 1er Semestre">S1</th>
-                                        <th className="border border-slate-300 px-1 py-0.5 text-center font-bold" title="Tercer Período">P3</th>
-                                        <th className="border border-slate-300 px-1 py-0.5 text-center font-bold" title="Cuarto Período">P4</th>
-                                        <th className="border border-slate-300 px-1 py-0.5 text-center font-bold bg-slate-200" title="Promedio 2do Semestre">S2</th>
+                                        {ORDEN_AREAS.map(area => (
+                                            ['P1','P2','P3','P4'].map(p => (
+                                                <th key={`${area}-${p}`} className="border border-slate-300 px-0.5 py-0.5 text-center font-bold w-6">{p}</th>
+                                            ))
+                                        ))}
                                     </tr>
                                 </thead>
                                 <tbody>
                                     {(datos.calificaciones_acad?.length ?? 0) === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="text-center py-4 text-[8px] text-slate-400">
+                                            <td colSpan={17} className="text-center py-4 text-[8px] text-slate-400">
                                                 Sin calificaciones académicas registradas.
                                             </td>
                                         </tr>
                                     ) : (
-                                        Array.from(agruparPorArea(datos.calificaciones_acad ?? [])).map(([area, califs]) => (
-                                            <>
-                                                <tr key={area}>
-                                                    <td className="border border-slate-400 px-1 py-0.5 bg-slate-700 text-white font-bold text-[7px] uppercase tracking-wide" colSpan={7}>
-                                                        {area}
-                                                    </td>
+                                        (datos.calificaciones_acad ?? []).map((c: any) => {
+                                            const vals: Record<string, number> = {
+                                                com_p1: c?.com_p1 ?? 0, com_p2: c?.com_p2 ?? 0, com_p3: c?.com_p3 ?? 0, com_p4: c?.com_p4 ?? 0,
+                                                cyt_p1: c?.cyt_p1 ?? 0, cyt_p2: c?.cyt_p2 ?? 0, cyt_p3: c?.cyt_p3 ?? 0, cyt_p4: c?.cyt_p4 ?? 0,
+                                                hys_p1: c?.hys_p1 ?? 0, hys_p2: c?.hys_p2 ?? 0, hys_p3: c?.hys_p3 ?? 0, hys_p4: c?.hys_p4 ?? 0,
+                                                dpe_p1: c?.dpe_p1 ?? 0, dpe_p2: c?.dpe_p2 ?? 0, dpe_p3: c?.dpe_p3 ?? 0, dpe_p4: c?.dpe_p4 ?? 0,
+                                            };
+                                            const PREFIX = ['com','cyt','hys','dpe'];
+                                            return (
+                                                <tr key={c.asignatura_id} className="hover:bg-slate-50">
+                                                    <td className="border border-slate-200 px-1 py-0.5 font-semibold">{c.asignatura?.nombre}</td>
+                                                    {PREFIX.map(pref =>
+                                                        (['p1','p2','p3','p4']).map(p => {
+                                                            const n = vals[`${pref}_${p}`];
+                                                            return (
+                                                                <td key={`${pref}_${p}`} className={`border border-slate-200 px-0.5 py-0.5 text-center font-bold ${colorNota(n)}`}>{n || '—'}</td>
+                                                            );
+                                                        })
+                                                    )}
                                                 </tr>
-                                                {califs.map((c: any) => {
-                                                    const p1v = c?.p1 ?? 0;
-                                                    const p2v = c?.p2 ?? 0;
-                                                    const p3v = c?.p3 ?? 0;
-                                                    const p4v = c?.p4 ?? 0;
-                                                    const s1v = s1(p1v, p2v);
-                                                    const s2v = s2(p3v, p4v);
-                                                    return (
-                                                        <tr key={c.asignatura_id} className="hover:bg-slate-50">
-                                                            <td className="border border-slate-200 px-1 py-0.5">{c.asignatura?.nombre}</td>
-                                                            {[p1v, p2v].map((n, i) => (
-                                                                <td key={i} className={`border border-slate-200 px-1 py-0.5 text-center font-semibold ${colorNota(n)}`}>{n || '—'}</td>
-                                                            ))}
-                                                            <td className={`border border-slate-200 px-1 py-0.5 text-center font-black bg-slate-50 ${colorNota(s1v)}`}>{s1v || '—'}</td>
-                                                            {[p3v, p4v].map((n, i) => (
-                                                                <td key={i} className={`border border-slate-200 px-1 py-0.5 text-center font-semibold ${colorNota(n)}`}>{n || '—'}</td>
-                                                            ))}
-                                                            <td className={`border border-slate-200 px-1 py-0.5 text-center font-black bg-slate-50 ${colorNota(s2v)}`}>{s2v || '—'}</td>
-                                                        </tr>
-                                                    );
-                                                })}
-                                            </>
-                                        ))
+                                            );
+                                        })
                                     )}
                                 </tbody>
                             </table>
 
                             {/* Leyenda */}
-                            <div className="mt-1 text-[6.5px] text-slate-400 leading-tight">
-                                <strong>P1/P2/P3/P4</strong> — Calificación de período (0-100) &nbsp;|&nbsp;
-                                <strong>S1</strong> — Semestral I (prom. P1+P2) &nbsp;|&nbsp;
-                                <strong>S2</strong> — Semestral II (prom. P3+P4) &nbsp;|&nbsp;
-                                Aprobación: ≥ 70 puntos
+                            <div className="mt-1 text-[6px] text-slate-400 leading-tight">
+                                <strong>P1/P2/P3/P4</strong> — Calificación de período &nbsp;|&nbsp;
+                                Aprobación: ≥ 70 puntos &nbsp;|&nbsp;
+                                — = no corresponde a esta competencia
                             </div>
                         </div>
 

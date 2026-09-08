@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, Link, useLocation } from 'react-router-dom';
-import { BookOpen, GraduationCap, Building2, Clock, Users, BookMarked, BarChart3 } from 'lucide-react';
+import { BookOpen, GraduationCap, Building2, Clock, Users, BookMarked, BarChart3, Heart, Layers, Brain } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import TeacherGradingDashboard from './pages/TeacherGradingDashboard';
 import TutorEmpresarialPortal from './pages/TutorEmpresarialPortal';
@@ -11,24 +11,24 @@ import AdminEnrollmentDashboard from './pages/AdminEnrollmentDashboard';
 import AdminReportsDashboard from './pages/AdminReportsDashboard';
 import BoletinCalificaciones from './pages/BoletinCalificaciones';
 import StudentPortal from './pages/StudentPortal';
+import FamiliaPortal from './pages/FamiliaPortal';
+import CoordinadorDashboard from './pages/CoordinadorDashboard';
+import SicologoDashboard from './pages/SicologoDashboard';
 import LoginScreen from './pages/LoginScreen';
 import Navbar from './components/Navbar';
 import AnimatedPage from './components/AnimatedPage';
-
-const API = 'http://localhost:3000';
+import api from './api';
 
 // ── Barra de estadísticas institucionales (solo Admin) ────────
 function AdminStatsBar() {
   const [stats, setStats] = useState({ estudiantes: 0, docentes: 0, periodo: '—', secciones: 0 });
 
   useEffect(() => {
-    const token = localStorage.getItem('lms_minerd_token');
-    const h = { Authorization: `Bearer ${token}` };
     Promise.all([
-      fetch(`${API}/api/estudiantes`, { headers: h }).then(r => r.json()).catch(() => []),
-      fetch(`${API}/api/docentes`, { headers: h }).then(r => r.json()).catch(() => []),
-      fetch(`${API}/api/matricula/periodos`, { headers: h }).then(r => r.json()).catch(() => []),
-      fetch(`${API}/api/matricula/secciones`, { headers: h }).then(r => r.json()).catch(() => []),
+      api.get('/api/estudiantes').then(r => r.data).catch(() => []),
+      api.get('/api/docentes').then(r => r.data).catch(() => []),
+      api.get('/api/matricula/periodos').then(r => r.data).catch(() => []),
+      api.get('/api/matricula/secciones').then(r => r.data).catch(() => []),
     ]).then(([est, doc, periodos, sec]) => {
       const pa = (Array.isArray(periodos) ? periodos : []).find((p: any) => p.es_activo);
       setStats({
@@ -130,6 +130,9 @@ function Home({ userRole, userName }: { userRole: string | null; userName: strin
           {userRole === 'DOCENTE' && 'Portal de evaluación docente — Registro de calificaciones por RAs'}
           {userRole === 'TUTOR_FCT' && 'Portal de seguimiento de Formación en Centros de Trabajo (FCT)'}
           {userRole === 'ESTUDIANTE' && 'Bienvenido a tu portal estudiantil — consulta calificaciones, boletín y más'}
+          {userRole === 'FAMILIA' && 'Portal familiar — Consulta el expediente académico de tu familiar'}
+          {userRole === 'COORDINADOR' && 'Portal de coordinación académica — Seguimiento de estudiantes y docentes'}
+          {userRole === 'SICOLOGO' && 'Portal de orientación — Gestión de registros anecdóticos y seguimiento estudiantil'}
         </p>
       </div>
 
@@ -221,6 +224,63 @@ function Home({ userRole, userName }: { userRole: string | null; userName: strin
         </motion.div>
       )}
 
+      {userRole === 'FAMILIA' && (
+        <motion.div variants={container} initial="hidden" animate="show" className="grid gap-5">
+          <motion.div variants={item}>
+            <Link to="/familia"
+              className="group flex flex-col sm:flex-row items-center gap-6 rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-xl hover:ring-2 hover:ring-rose-300 transition-all duration-300 ring-offset-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-rose-500 to-rose-600 rounded-2xl flex items-center justify-center text-white shrink-0">
+                <Heart className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <span className="text-[10px] font-bold tracking-wider text-rose-500 uppercase">Portal Familiar</span>
+                <h2 className="text-xl font-bold text-slate-800 mt-0.5">Expediente de mi Familiar</h2>
+                <p className="text-sm text-slate-500 mt-1">Consulta calificaciones, boletín, anotaciones y progreso académico de tu familiar estudiante.</p>
+              </div>
+              <div className="text-xs font-semibold text-rose-600 group-hover:translate-x-1 transition-transform shrink-0">Acceder →</div>
+            </Link>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {userRole === 'COORDINADOR' && (
+        <motion.div variants={container} initial="hidden" animate="show" className="grid gap-5">
+          <motion.div variants={item}>
+            <Link to="/coordinador"
+              className="group flex flex-col sm:flex-row items-center gap-6 rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-xl hover:ring-2 hover:ring-orange-300 transition-all duration-300 ring-offset-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center text-white shrink-0">
+                <Layers className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <span className="text-[10px] font-bold tracking-wider text-orange-500 uppercase">Coordinación Académica</span>
+                <h2 className="text-xl font-bold text-slate-800 mt-0.5">Panel de Coordinación</h2>
+                <p className="text-sm text-slate-500 mt-1">Visualiza el desempeño de estudiantes y docentes, secciones y resumen académico institucional.</p>
+              </div>
+              <div className="text-xs font-semibold text-orange-600 group-hover:translate-x-1 transition-transform shrink-0">Acceder →</div>
+            </Link>
+          </motion.div>
+        </motion.div>
+      )}
+
+      {userRole === 'SICOLOGO' && (
+        <motion.div variants={container} initial="hidden" animate="show" className="grid gap-5">
+          <motion.div variants={item}>
+            <Link to="/sicologo"
+              className="group flex flex-col sm:flex-row items-center gap-6 rounded-2xl border border-slate-200 bg-white p-6 hover:shadow-xl hover:ring-2 hover:ring-teal-300 transition-all duration-300 ring-offset-2">
+              <div className="w-16 h-16 bg-gradient-to-br from-teal-500 to-teal-600 rounded-2xl flex items-center justify-center text-white shrink-0">
+                <Brain className="w-8 h-8" />
+              </div>
+              <div className="flex-1">
+                <span className="text-[10px] font-bold tracking-wider text-teal-500 uppercase">Orientación Escolar</span>
+                <h2 className="text-xl font-bold text-slate-800 mt-0.5">Portal de Sicología</h2>
+                <p className="text-sm text-slate-500 mt-1">Gestiona registros anecdóticos, consulta el historial de incidencias y da seguimiento a estudiantes.</p>
+              </div>
+              <div className="text-xs font-semibold text-teal-600 group-hover:translate-x-1 transition-transform shrink-0">Acceder →</div>
+            </Link>
+          </motion.div>
+        </motion.div>
+      )}
+
       {/* Footer info */}
       <div className="mt-10 pt-6 border-t border-slate-200 flex flex-wrap items-center gap-4 text-xs text-slate-400">
         <span>📍 Distrito Educativo 17-02 · Monte Plata</span>
@@ -234,7 +294,7 @@ function Home({ userRole, userName }: { userRole: string | null; userName: strin
   );
 }
 
-function AnimatedRoutes({ userRole, userName }: { userRole: 'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE' | null; userName: string }) {
+function AnimatedRoutes({ userRole, userName }: { userRole: 'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE' | 'FAMILIA' | 'COORDINADOR' | 'SICOLOGO' | null; userName: string }) {
   const location = useLocation();
 
   return (
@@ -268,6 +328,21 @@ function AnimatedRoutes({ userRole, userName }: { userRole: 'ADMIN' | 'DOCENTE' 
           </>
         )}
 
+        {/* Rutas de Familia */}
+        {userRole === 'FAMILIA' && (
+          <Route path="/familia" element={<AnimatedPage><FamiliaPortal /></AnimatedPage>} />
+        )}
+
+        {/* Rutas de Coordinador */}
+        {userRole === 'COORDINADOR' && (
+          <Route path="/coordinador" element={<AnimatedPage><CoordinadorDashboard /></AnimatedPage>} />
+        )}
+
+        {/* Rutas de Sicólogo */}
+        {userRole === 'SICOLOGO' && (
+          <Route path="/sicologo" element={<AnimatedPage><SicologoDashboard /></AnimatedPage>} />
+        )}
+
         {/* Redirección Segura por defecto */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
@@ -276,21 +351,33 @@ function AnimatedRoutes({ userRole, userName }: { userRole: 'ADMIN' | 'DOCENTE' 
 }
 
 function MainApp() {
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [userRole, setUserRole] = useState<'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE' | null>(null);
-  const [userName, setUserName] = useState('');
+  const saved = JSON.parse(localStorage.getItem('lms_minerd_session') || 'null');
+  const token = localStorage.getItem('lms_minerd_token');
 
-  const handleLogin = (rol: 'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE', nombre: string) => {
+  const [isAuthenticated, setIsAuthenticated] = useState(!!(saved?.rol && token));
+  const [userRole, setUserRole] = useState<'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE' | 'FAMILIA' | 'COORDINADOR' | 'SICOLOGO' | null>(saved?.rol ?? null);
+  const [userName, setUserName] = useState(saved?.nombre ?? '');
+
+  const handleLogin = (rol: 'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE' | 'FAMILIA' | 'COORDINADOR' | 'SICOLOGO', nombre: string) => {
+    localStorage.setItem('lms_minerd_session', JSON.stringify({ rol, nombre }));
     setUserRole(rol);
     setUserName(nombre);
     setIsAuthenticated(true);
   };
 
   const handleLogout = () => {
+    localStorage.removeItem('lms_minerd_session');
+    localStorage.removeItem('lms_minerd_token');
     setIsAuthenticated(false);
     setUserRole(null);
     setUserName('');
   };
+
+  useEffect(() => {
+    const onUnauthorized = () => handleLogout();
+    window.addEventListener('lms:unauthorized', onUnauthorized);
+    return () => window.removeEventListener('lms:unauthorized', onUnauthorized);
+  }, []); // eslint-disable-line
 
   return (
     <AnimatePresence mode="wait">

@@ -17,6 +17,9 @@ model Usuario {
   fecha_creacion   DateTime          @default(now())
   perfilDocente    DocentePerfil?
   perfilEstudiante EstudiantePerfil?
+  perfilFamilia    FamiliaPerfil?
+  perfilCoordinador CoordinadorPerfil?
+  perfilSicologo   SicologoPerfil?
   modulosFormativo ModuloFormativo[] @relation("DocenteEncargado")
 }
 
@@ -58,6 +61,9 @@ model Seccion {
   grado             String
   cargas_academicas CargaAcademica[]
   matriculas        MatriculaEstudiante[]
+  tareas            Tarea[]
+  asistencias       RegistroAsistencia[]
+  sicologos         SicologoSeccion[]
   carrera           CarreraTecnica        @relation(fields: [carrera_id], references: [id])
 }
 
@@ -78,8 +84,14 @@ model EstudiantePerfil {
   usuario               Usuario               @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   matriculas            MatriculaEstudiante[]
   anecdotas             RegistroAnecdotico[]
+  asistencias           RegistroAsistencia[]
   tutores               TutorLegal[]
   evaluaciones_fct      EvaluacionFCT[]
+  visitas_padres        VisitaPadre[]
+  asignaciones_fct      AsignacionFCT[]
+  disciplina            RegistroDisciplina[]
+  familias_vinculadas   FamiliaPerfil[]
+  entregas_tarea        EntregaTarea[]
 }
 
 model TutorLegal {
@@ -104,8 +116,10 @@ model DocentePerfil {
   calificaciones_ra    CalificacionRA[]
   calificaciones_acad  CalificacionAcademica[]
   cargas_academicas    CargaAcademica[]
+  tareas               Tarea[]
   usuario              Usuario              @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   anecdotas_creadas    RegistroAnecdotico[]
+  asistencias_registradas RegistroAsistencia[]
 }
 
 model ModuloFormativo {
@@ -147,11 +161,49 @@ model CargaAcademica {
   asignatura_academica   AsignaturaAcademica? @relation(fields: [asignatura_academica_id], references: [id])
   docente                DocentePerfil        @relation(fields: [docente_id], references: [id])
   periodo                PeriodoAcademico     @relation(fields: [periodo_id], references: [id])
+  tareas                 Tarea[]
+  horarios               HorarioCarga[]
 
   // Validar a nivel aplicación que uno u otro exista.
   @@unique([periodo_id, modulo_formativo_id, seccion_id])
 }
 
+model HorarioCarga {
+  id          Int            @id @default(autoincrement())
+  carga_id    Int
+  dia         String
+  hora_inicio String
+  hora_fin    String
+  aula        String?
+  carga       CargaAcademica @relation(fields: [carga_id], references: [id], onDelete: Cascade)
+}
+
+model DocumentoHorario {
+  id          Int      @id @default(autoincrement())
+  nombre      String
+  descripcion String?
+  filename    String
+  tipo_mime   String   @default("application/pdf")
+  periodo_id  Int?
+  subido_por  Int
+  creado_en   DateTime @default(now())
+}
+
+
+model EventoCalendario {
+  id           Int      @id @default(autoincrement())
+  titulo       String
+  descripcion  String?
+  fecha_inicio DateTime
+  fecha_fin    DateTime?
+  tipo         String   @default("EVENTO")
+  color        String   @default("indigo")
+  es_global    Boolean  @default(true)
+  seccion_id   Int?
+  periodo_id   Int?
+  creado_por   Int
+  creado_en    DateTime @default(now())
+}
 
 model MatriculaEstudiante {
   id                Int              @id @default(autoincrement())
@@ -186,12 +238,72 @@ model CalificacionRA {
 model RegistroAnecdotico {
   id             Int              @id @default(autoincrement())
   estudiante_id  Int
-  docente_id     Int
+  docente_id     Int?
   incidencia     String
   tipo           String           @default("OBSERVACION")
   fecha_registro DateTime         @default(now())
-  docente        DocentePerfil    @relation(fields: [docente_id], references: [id])
+  docente        DocentePerfil?   @relation(fields: [docente_id], references: [id])
   estudiante     EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+}
+
+model RegistroAsistencia {
+  id            Int              @id @default(autoincrement())
+  estudiante_id Int
+  seccion_id    Int
+  fecha         DateTime
+  estado        String           @default("PRESENTE")
+  observacion   String?
+  docente_id    Int
+  creado_en     DateTime         @default(now())
+  docente       DocentePerfil    @relation(fields: [docente_id], references: [id])
+  estudiante    EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+  seccion       Seccion          @relation(fields: [seccion_id], references: [id])
+
+  @@unique([estudiante_id, seccion_id, fecha])
+}
+
+model VisitaPadre {
+  id              Int              @id @default(autoincrement())
+  estudiante_id   Int
+  fecha           DateTime
+  quien_visita    String
+  parentesco      String           @default("TUTOR")
+  motivo          String
+  acuerdos        String?
+  proxima_reunion DateTime?
+  registrado_por  Int
+  creado_en       DateTime         @default(now())
+  estudiante      EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+}
+
+model AsignacionFCT {
+  id                   Int              @id @default(autoincrement())
+  estudiante_id        Int
+  empresa              String
+  tutor_empresa_nombre String
+  tutor_empresa_tel    String?
+  fecha_inicio         DateTime
+  fecha_fin_esperada   DateTime
+  horas_requeridas     Int              @default(360)
+  estado               String           @default("ACTIVA")
+  observaciones        String?
+  creado_en            DateTime         @default(now())
+  estudiante           EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+}
+
+model RegistroDisciplina {
+  id                Int              @id @default(autoincrement())
+  estudiante_id     Int
+  tipo              String           @default("LEVE")
+  descripcion       String
+  sancion           String?
+  estado            String           @default("ABIERTO")
+  fecha_incidente   DateTime
+  fecha_notif_padre DateTime?
+  resolucion        String?
+  registrado_por    Int
+  creado_en         DateTime         @default(now())
+  estudiante        EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
 }
 
 model AsignaturaAcademica {
@@ -209,18 +321,35 @@ model CalificacionAcademica {
   id             Int                 @id @default(autoincrement())
   estudiante_id  Int
   asignatura_id  Int
-  p1             Int?                @default(0)
-  p2             Int?                @default(0)
-  p3             Int?                @default(0)
-  p4             Int?                @default(0)
+  // Comunicativa
+  com_p1         Int?                @default(0)
+  com_p2         Int?                @default(0)
+  com_p3         Int?                @default(0)
+  com_p4         Int?                @default(0)
+  // Científica y Tecnológica
+  cyt_p1         Int?                @default(0)
+  cyt_p2         Int?                @default(0)
+  cyt_p3         Int?                @default(0)
+  cyt_p4         Int?                @default(0)
+  // Humanística y Social
+  hys_p1         Int?                @default(0)
+  hys_p2         Int?                @default(0)
+  hys_p3         Int?                @default(0)
+  hys_p4         Int?                @default(0)
+  // Desarrollo Personal y Espiritual
+  dpe_p1         Int?                @default(0)
+  dpe_p2         Int?                @default(0)
+  dpe_p3         Int?                @default(0)
+  dpe_p4         Int?                @default(0)
+  // Recuperación y pruebas especiales
   rp1            Int?                @default(0)
   rp2            Int?                @default(0)
   rp3            Int?                @default(0)
   rp4            Int?                @default(0)
-  cpc            Int?                @default(0) // Calif. Prueba Completiva
-  cpex           Int?                @default(0) // Extraordinaria
+  cpc            Int?                @default(0)
+  cpex           Int?                @default(0)
   estado         String              @default("CURSANDO")
-  docente_id     Int                 // Docente que asentó la nota
+  docente_id     Int
   docente        DocentePerfil       @relation(fields: [docente_id], references: [id])
   estudiante     EstudiantePerfil    @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
   asignatura     AsignaturaAcademica @relation(fields: [asignatura_id], references: [id])
@@ -231,12 +360,86 @@ model CalificacionAcademica {
 model EvaluacionFCT {
   id               Int              @id @default(autoincrement())
   estudiante_id    Int
-  tutor_empresa    String           // Nombre del tutor externo
+  tutor_empresa    String
   empresa          String
   horas_reportadas Int
-  criterios        String           // JSON serializado con las calificaciones por criterio
+  criterios        String
   comentarios      String?
-  estado           String           @default("ENVIADO") // ENVIADO | APROBADO
+  estado           String           @default("ENVIADO")
   creado_en        DateTime         @default(now())
   estudiante       EstudiantePerfil @relation(fields: [estudiante_id], references: [id], onDelete: Cascade)
+}
+
+model FamiliaPerfil {
+  id            Int              @id @default(autoincrement())
+  usuario_id    Int              @unique
+  estudiante_id Int
+  parentesco    String           @default("TUTOR")
+  usuario       Usuario          @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  estudiante    EstudiantePerfil @relation(fields: [estudiante_id], references: [id])
+}
+
+model CoordinadorPerfil {
+  id             Int     @id @default(autoincrement())
+  usuario_id     Int     @unique
+  cedula         String  @unique
+  departamento   String  @default("Coordinación Académica")
+  estado_laboral String  @default("ACTIVO")
+  usuario        Usuario @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+}
+
+model SicologoPerfil {
+  id             Int                @id @default(autoincrement())
+  usuario_id     Int                @unique
+  cedula         String             @unique
+  estado_laboral String             @default("ACTIVO")
+  usuario        Usuario            @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  secciones      SicologoSeccion[]
+}
+
+model SicologoSeccion {
+  id          Int            @id @default(autoincrement())
+  sicologo_id Int
+  seccion_id  Int
+  asignado_en DateTime       @default(now())
+  sicologo    SicologoPerfil @relation(fields: [sicologo_id], references: [id], onDelete: Cascade)
+  seccion     Seccion        @relation(fields: [seccion_id], references: [id], onDelete: Cascade)
+
+  @@unique([sicologo_id, seccion_id])
+}
+
+model Tarea {
+  id               Int            @id @default(autoincrement())
+  titulo           String
+  descripcion      String
+  instrucciones    String?
+  tipo             String         @default("TAREA")
+  prioridad        String         @default("MEDIA")
+  fecha_asignacion DateTime       @default(now())
+  fecha_entrega    DateTime
+  seccion_id       Int
+  carga_id         Int?
+  docente_id       Int
+  estado           String         @default("ACTIVA")
+  permite_entrega  Boolean        @default(true)
+  creado_en        DateTime       @default(now())
+  actualizado_en   DateTime       @updatedAt
+  seccion          Seccion        @relation(fields: [seccion_id], references: [id])
+  docente          DocentePerfil  @relation(fields: [docente_id], references: [id])
+  carga            CargaAcademica? @relation(fields: [carga_id], references: [id])
+  entregas         EntregaTarea[]
+}
+
+model EntregaTarea {
+  id            Int              @id @default(autoincrement())
+  tarea_id      Int
+  estudiante_id Int
+  estado        String           @default("PENDIENTE")
+  comentario    String?
+  fecha_entrega DateTime?
+  creado_en     DateTime         @default(now())
+  tarea         Tarea            @relation(fields: [tarea_id], references: [id], onDelete: Cascade)
+  estudiante    EstudiantePerfil @relation(fields: [estudiante_id], references: [id])
+
+  @@unique([tarea_id, estudiante_id])
 }

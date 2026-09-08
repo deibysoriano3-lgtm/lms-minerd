@@ -87,4 +87,15 @@ export class CurriculumService {
             return creados;
         });
     }
+
+    async getTodosModulos() {
+        return this.prisma.moduloFormativo.findMany({
+            include: { carrera: { select: { nombre: true } } },
+            orderBy: { nombre: 'asc' },
+        });
+    }
+
+    async getAsignaturas() {
+        return this.prisma.asignaturaAcademica.findMany({ orderBy: { nombre: 'asc' } });
+    }
 }

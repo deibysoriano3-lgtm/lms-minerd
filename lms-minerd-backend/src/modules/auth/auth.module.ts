@@ -12,7 +12,7 @@ import { PrismaService } from '../../prisma.service';
     PassportModule,
     JwtModule.register({
       secret: jwtConstants.secret,
-      signOptions: { expiresIn: '60m' }, // Token expira en 1 hora
+      signOptions: { expiresIn: '8h' },
     }),
   ],
   providers: [AuthService, JwtStrategy, PrismaService],

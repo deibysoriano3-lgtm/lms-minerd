@@ -4,7 +4,7 @@ import { ShieldCheck, Lock, User, Eye, EyeOff, Building, AlertCircle, BookOpen }
 import { motion } from 'framer-motion';
 
 interface LoginProps {
-    onLoginExitoso: (rol: 'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE', nombre: string) => void;
+    onLoginExitoso: (rol: 'ADMIN' | 'DOCENTE' | 'TUTOR_FCT' | 'ESTUDIANTE' | 'FAMILIA' | 'COORDINADOR' | 'SICOLOGO', nombre: string) => void;
 }
 
 export default function LoginScreen({ onLoginExitoso }: LoginProps) {
@@ -189,7 +189,7 @@ export default function LoginScreen({ onLoginExitoso }: LoginProps) {
                                 className="w-full inline-flex justify-center items-center py-2.5 px-4 border border-slate-300 rounded-lg shadow-sm bg-white text-sm font-bold text-slate-700 hover:bg-slate-50 transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500"
                             >
                                 <Building className="w-4 h-4 mr-2 text-slate-500" />
-                                Entrar a Portal FCT (Prueba)
+                                Entrar a Portal FCT
                             </button>
                         </div>
                     </div>

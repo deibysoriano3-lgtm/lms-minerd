@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import {
     Search, FileSpreadsheet, FileText, CheckCircle, GraduationCap,
     ShieldCheck, FileDown, Loader2, FileOutput, AlertCircle, Printer
@@ -86,11 +86,8 @@ export default function AdminReportsDashboard() {
     const [descargando, setDescargando] = useState<string | null>(null);
     const [mensajeOk, setMensajeOk] = useState('');
 
-    const token = localStorage.getItem('lms_minerd_token');
-    const headers = { Authorization: `Bearer ${token}` };
-
     useEffect(() => {
-        axios.get('http://localhost:3000/api/matricula/secciones', { headers })
+        api.get('/api/matricula/secciones')
             .then(r => {
                 setSecciones(r.data);
                 if (r.data.length > 0) setSeccionId(r.data[0].id);
@@ -106,8 +103,8 @@ export default function AdminReportsDashboard() {
             if (!seccionId) { alert('Seleccione una sección primero.'); return; }
             setDescargando(rpt.id);
             try {
-                const res = await axios.get(`http://localhost:3000/api/reportes/sabana-excel/${seccionId}`, {
-                    headers, responseType: 'blob'
+                const res = await api.get(`/api/reportes/sabana-excel/${seccionId}`, {
+                    responseType: 'blob'
                 });
                 const secNombre = secciones.find(s => s.id === seccionId)?.nombre ?? 'Seccion';
                 const url = window.URL.createObjectURL(new Blob([res.data]));
@@ -127,8 +124,16 @@ export default function AdminReportsDashboard() {
 
         if (rpt.id === 'RPT-01') {
             if (!busquedaRNE.trim()) { alert('Ingrese el RNE del estudiante para generar el boletín.'); return; }
-            // Placeholder: conectar endpoint de boletín cuando esté listo en el backend
-            alert(`El endpoint de Boletín PDF para RNE "${busquedaRNE}" está en construcción en el backend (GET /api/reportes/boletin/:rne).`);
+            setDescargando(rpt.id);
+            try {
+                const res = await api.get('/api/estudiantes');
+                const estudiantes: any[] = res.data;
+                const est = estudiantes.find((e: any) => e.rne?.toLowerCase() === busquedaRNE.trim().toLowerCase());
+                if (!est) { alert(`No se encontró ningún estudiante con RNE "${busquedaRNE}".`); return; }
+                window.open(`/boletin/${est.id}`, '_blank');
+            } catch {
+                alert('Error al buscar el estudiante. Verifique la conexión.');
+            } finally { setDescargando(null); }
             return;
         }
     };

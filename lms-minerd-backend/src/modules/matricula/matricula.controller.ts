@@ -22,6 +22,11 @@ export class MatriculaController {
         return this.matriculaService.getPeriodosActivos();
     }
 
+    @Post('periodos')
+    crearPeriodo(@Body() body: { nombre: string; fecha_inicio: string; fecha_fin: string }) {
+        return this.matriculaService.crearPeriodo(body.nombre, body.fecha_inicio, body.fecha_fin);
+    }
+
     @Get('secciones')
     getSecciones() {
         return this.matriculaService.getSeccionesDisponibles();

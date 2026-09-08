@@ -27,9 +27,19 @@ export class CurriculumController {
         return this.curriculumService.createModulo(body);
     }
 
+    @Get('modulos')
+    async getTodosModulos() {
+        return this.curriculumService.getTodosModulos();
+    }
+
     @Get('modulos/:carreraId')
     async getModulos(@Param('carreraId') carreraId: string) {
         return this.curriculumService.getModulosPorCarrera(Number(carreraId));
+    }
+
+    @Get('asignaturas')
+    async getAsignaturas() {
+        return this.curriculumService.getAsignaturas();
     }
 
     @Post('modulos/:moduloId/ras')

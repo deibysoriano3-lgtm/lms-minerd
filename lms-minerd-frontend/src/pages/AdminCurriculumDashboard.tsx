@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import axios from 'axios';
+import api from '../api';
 import {
     AlertTriangle, Plus, Trash2, Save, ChevronRight, BookOpen,
     GraduationCap, Layers, Clock, CheckCircle2, Circle, ArrowLeft,
@@ -43,15 +43,11 @@ export default function AdminCurriculumDashboard() {
     const [errorMsg, setErrorMsg] = useState<string | null>(null);
     const [cargandoModulos, setCargandoModulos] = useState(false);
 
-    const token = localStorage.getItem('lms_minerd_token');
-    const headers = { Authorization: `Bearer ${token}` };
-
     // ── Carga inicial de carreras ───────────────────────────────────────────
     useEffect(() => {
-        axios.get('http://localhost:3000/api/curriculum/carreras', { headers })
+        api.get('/api/curriculum/carreras')
             .then(r => setCarreras(r.data))
             .catch(() => setErrorMsg('Error cargando las Carreras Técnicas del servidor.'));
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
     // ── Seleccionar Carrera ─────────────────────────────────────────────────
@@ -62,7 +58,7 @@ export default function AdminCurriculumDashboard() {
         setSumaTotal(0);
         setCargandoModulos(true);
         try {
-            const r = await axios.get(`http://localhost:3000/api/curriculum/modulos/${carrera.id}`, { headers });
+            const r = await api.get(`/api/curriculum/modulos/${carrera.id}`);
             setModulos(r.data);
         } catch { /* silencioso */ } finally {
             setCargandoModulos(false);
@@ -107,10 +103,9 @@ export default function AdminCurriculumDashboard() {
         if (sumaTotal !== 100) return;
         setGuardando(true);
         try {
-            await axios.post(
-                `http://localhost:3000/api/curriculum/modulos/${moduloActivo!.id}/ras`,
-                { ras: rasTemporales },
-                { headers }
+            await api.post(
+                `/api/curriculum/modulos/${moduloActivo!.id}/ras`,
+                { ras: rasTemporales }
             );
             setGuardadoOk(true);
             handleSelectCarrera(carreraActiva!);

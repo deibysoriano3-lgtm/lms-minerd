@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import axios from 'axios';
+import api from '../api';
 import { CheckCircle, Loader2, AlertCircle, Clock } from 'lucide-react';
 
 type EstadoEvaluacion = 'Excelente' | 'Bueno' | 'Suficiente' | 'Deficiente';
@@ -59,7 +59,7 @@ export default function TutorEmpresarialPortal() {
             const criteriosMap: Record<string, string> = {};
             criterios.forEach(c => { criteriosMap[c.id] = c.calificacion; });
 
-            await axios.post('http://localhost:3000/api/fct/evaluacion', {
+            await api.post('/api/fct/evaluacion', {
                 rne: rne.trim(),
                 tutor_empresa: 'Ing. Roberto Sánchez',
                 empresa: 'Banco BHD — Dpto. de TI',

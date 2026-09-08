@@ -47,6 +47,18 @@ export class MatriculaService {
         });
     }
 
+    async crearPeriodo(nombre: string, fecha_inicio: string, fecha_fin: string) {
+        await this.prisma.periodoAcademico.updateMany({ data: { es_activo: false } });
+        return this.prisma.periodoAcademico.create({
+            data: {
+                nombre,
+                fecha_inicio: new Date(fecha_inicio),
+                fecha_fin: new Date(fecha_fin),
+                es_activo: true,
+            },
+        });
+    }
+
     async getSeccionesDisponibles() {
         return this.prisma.seccion.findMany({
             include: {
