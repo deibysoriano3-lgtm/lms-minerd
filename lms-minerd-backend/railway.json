@@ -5,7 +5,7 @@
     "buildCommand": "npm install --include=dev && npx prisma generate && npm run build"
   },
   "deploy": {
-    "startCommand": "npx prisma db push --accept-data-loss && SEED_MODE=production npm run seed && npm run start:prod",
+    "startCommand": "npx prisma db push --accept-data-loss && (SEED_MODE=production npx ts-node -r tsconfig-paths/register prisma/seed.ts || true) && node dist/main",
     "restartPolicyType": "on-failure",
     "restartPolicyMaxRetries": 3
   }
