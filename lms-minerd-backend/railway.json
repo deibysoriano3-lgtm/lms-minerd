@@ -1,11 +1,10 @@
 {
   "$schema": "https://railway.app/railway.schema.json",
   "build": {
-    "builder": "nixpacks",
-    "buildCommand": "npm install --include=dev && npx prisma generate && npm run build"
+    "builder": "DOCKERFILE",
+    "dockerfilePath": "Dockerfile"
   },
   "deploy": {
-    "startCommand": "npx prisma db push --accept-data-loss && (SEED_MODE=production npx ts-node -r tsconfig-paths/register prisma/seed.ts || true) && node dist/main",
     "restartPolicyType": "on-failure",
     "restartPolicyMaxRetries": 3
   }
