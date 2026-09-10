@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: lms-minerd-backend
+    runtime: docker
+    dockerfilePath: ./lms-minerd-backend/Dockerfile
+    dockerContext: ./lms-minerd-backend
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        sync: false
+      - key: PORT
+        value: 3000
+      - key: FRONTEND_URL
+        sync: false
+      - key: ADMIN_EMAIL
+        sync: false
+      - key: ADMIN_PASSWORD
+        sync: false
+      - key: SEED_MODE
+        value: production
